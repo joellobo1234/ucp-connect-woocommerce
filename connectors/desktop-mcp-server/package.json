@@ -1,0 +1,24 @@
+{
+    "name": "ucp-wordpress-connector",
+    "version": "1.0.0",
+    "description": "MCP Bridge for UCP Connect WordPress Plugin. Allows Desktop AI Agents (Claude, Cline) to talk to your WordPress store.",
+    "main": "index.js",
+    "bin": {
+        "ucp-connector": "./index.js"
+    },
+    "scripts": {
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "minimist": "^1.2.8"
+    },
+    "keywords": [
+        "mcp",
+        "wordpress",
+        "ucp",
+        "ai",
+        "claude"
+    ],
+    "author": "UCP Team",
+    "license": "MIT"
+}
