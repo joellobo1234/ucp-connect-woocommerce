@@ -52,12 +52,16 @@ class UCP_API
             'protocol' => 'ucp',
             'version' => '0.1.0',
             'capabilities' => array(
-                'search' => array(
+                'shopping.search' => array(
+                    'version' => '2026-01-11',
                     'endpoint' => '/ucp/v1/search',
+                    'schema' => 'https://ucp.dev/schemas/shopping/search.json',
                     'method' => 'POST',
                 ),
-                'checkout' => array(
+                'shopping.checkout' => array(
+                    'version' => '2026-01-11',
                     'endpoint' => '/ucp/v1/checkout',
+                    'schema' => 'https://ucp.dev/schemas/shopping/checkout.json',
                     'method' => 'POST',
                 ),
             ),
