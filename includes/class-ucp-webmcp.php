@@ -124,23 +124,6 @@ class UCP_WebMCP
                                 },
                                 required: ['query']
                             },
-                            outputSchema: {
-                                type: 'object',
-                                properties: {
-                                    items: {
-                                        type: 'array',
-                                        items: {
-                                            type: 'object',
-                                            properties: {
-                                                id: { type: 'string' },
-                                                name: { type: 'string' },
-                                                price: { type: 'object' },
-                                                availability: { type: 'string' }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
                             execute: async function (args) {
                                 try {
                                     const result = await callRestAPI('/search', 'POST', { query: args.query });
@@ -175,7 +158,7 @@ class UCP_WebMCP
                                         items: {
                                             type: 'object',
                                             properties: {
-                                                id: { type: 'integer', description: 'Product ID' },
+                                                id: { type: ['integer', 'string'], description: 'Product ID' },
                                                 quantity: { type: 'integer', description: 'Quantity to purchase' }
                                             },
                                             required: ['id', 'quantity']
@@ -183,15 +166,6 @@ class UCP_WebMCP
                                     }
                                 },
                                 required: ['items']
-                            },
-                            outputSchema: {
-                                type: 'object',
-                                properties: {
-                                    order_id: { type: 'integer' },
-                                    payment_url: { type: 'string' },
-                                    total: { type: 'string' },
-                                    currency: { type: 'string' }
-                                }
                             },
                             execute: async function (args) {
                                 try {
@@ -221,15 +195,6 @@ class UCP_WebMCP
                             inputSchema: {
                                 type: 'object',
                                 properties: {}
-                            },
-                            outputSchema: {
-                                type: 'object',
-                                properties: {
-                                    protocol: { type: 'string' },
-                                    version: { type: 'string' },
-                                    capabilities: { type: 'object' },
-                                    store_info: { type: 'object' }
-                                }
                             },
                             execute: async function (args) {
                                 try {
