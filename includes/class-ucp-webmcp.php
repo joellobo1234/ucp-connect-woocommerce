@@ -112,7 +112,7 @@ class UCP_WebMCP
                     // Define UCP tools following @mcp-b/global standard
                     const ucpTools = [
                         {
-                            name: 'ucp_search_products',
+                            name: 'search_products',
                             description: 'Search for products in this WooCommerce store. Returns a list of products matching the query.',
                             inputSchema: {
                                 type: 'object',
@@ -158,7 +158,7 @@ class UCP_WebMCP
                             }
                         },
                         {
-                            name: 'ucp_create_checkout',
+                            name: 'create_checkout',
                             description: 'Create a new checkout session with selected products. Returns a checkout URL for completing the purchase.',
                             inputSchema: {
                                 type: 'object',
@@ -202,7 +202,7 @@ class UCP_WebMCP
                             }
                         },
                         {
-                            name: 'ucp_get_discovery',
+                            name: 'get_discovery',
                             description: 'Get store capabilities and information. Returns details about what this store supports.',
                             inputSchema: {
                                 type: 'object',
