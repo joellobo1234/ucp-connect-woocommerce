@@ -131,3 +131,8 @@ For more information about UCP, visit: [https://ucp.dev](https://ucp.dev)
 *   Implement full UCP JSON Schema validation.
 *   Add support for `fulfillment` and `payment` protocol messages.
 *   Add API Key authentication for authorized agents.
+
+## Changelog
+
+### 1.0.1
+*   Fixed: Race condition with WebMCP initialization that caused "Tool dummyTool is already registered" errors when using browser extensions like AWL Tool. The polyfill injection is now delayed until the window load event.

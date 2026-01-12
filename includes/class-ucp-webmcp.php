@@ -31,26 +31,36 @@ class UCP_WebMCP
         ?>
         <script>
             (function () {
-                // Check if @mcp-b/global is already loaded
-                if (window.navigator?.modelContext) {
-                    console.log('[UCP Connect] navigator.modelContext already available');
-                    return;
+                // Function to initialize or check for modelContext
+                function initWebMCP() {
+                    // Check if @mcp-b/global is already loaded
+                    if (window.navigator?.modelContext) {
+                        console.log('[UCP Connect] navigator.modelContext already available');
+                        return;
+                    }
+
+                    console.log('[UCP Connect] Loading @mcp-b/global from CDN...');
+
+                    // Load @mcp-b/global polyfill from unpkg
+                    const script = document.createElement('script');
+                    script.src = 'https://unpkg.com/@mcp-b/global@latest/dist/index.iife.js';
+                    script.async = false; // Load synchronously to ensure it's ready
+                    script.onload = function () {
+                        console.log('[UCP Connect] @mcp-b/global loaded successfully');
+                        window.dispatchEvent(new CustomEvent('ucp:webmcp-ready'));
+                    };
+                    script.onerror = function () {
+                        console.error('[UCP Connect] Failed to load @mcp-b/global. WebMCP tools will not be available.');
+                    };
+                    document.head.appendChild(script);
                 }
 
-                console.log('[UCP Connect] Loading @mcp-b/global from CDN...');
-
-                // Load @mcp-b/global polyfill from unpkg
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/@mcp-b/global@latest/dist/index.iife.js';
-                script.async = false; // Load synchronously to ensure it's ready
-                script.onload = function () {
-                    console.log('[UCP Connect] @mcp-b/global loaded successfully');
-                    window.dispatchEvent(new CustomEvent('ucp:webmcp-ready'));
-                };
-                script.onerror = function () {
-                    console.error('[UCP Connect] Failed to load @mcp-b/global. WebMCP tools will not be available.');
-                };
-                document.head.appendChild(script);
+                // Wait for full page load to give extensions priority
+                if (document.readyState === 'complete') {
+                    initWebMCP();
+                } else {
+                    window.addEventListener('load', initWebMCP);
+                }
             })();
         </script>
         <?php
