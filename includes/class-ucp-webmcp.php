@@ -127,10 +127,21 @@ class UCP_WebMCP
                             execute: async function (args) {
                                 try {
                                     const result = await callRestAPI('/search', 'POST', { query: args.query });
+                                    const count = result.items?.length || 0;
+                                    let text = `Found ${count} products for "${args.query}"`;
+                                    
+                                    if (count > 0) {
+                                        const productList = result.items.map(item => {
+                                            const price = item.price ? `${item.price.value} ${item.price.currency}` : 'N/A';
+                                            return `- [ID: ${item.id}] ${item.name} (${price})`;
+                                        }).join('\n');
+                                        text += `:\n${productList}`;
+                                    }
+
                                     return {
                                         content: [{
                                             type: 'text',
-                                            text: `Found ${result.items?.length || 0} products for "${args.query}"`
+                                            text: text
                                         }],
                                         structuredContent: result,
                                         isError: false
@@ -170,10 +181,11 @@ class UCP_WebMCP
                             execute: async function (args) {
                                 try {
                                     const result = await callRestAPI('/checkout', 'POST', { items: args.items });
+                                    const total = result.total ? `${result.total} ${result.currency}` : 'Pending';
                                     return {
                                         content: [{
                                             type: 'text',
-                                            text: `Checkout created! Order ID: ${result.order_id}. Payment URL: ${result.payment_url}`
+                                            text: `Checkout created successfully!\nOrder ID: ${result.order_id}\nTotal: ${total}\nPayment URL: ${result.payment_url}`
                                         }],
                                         structuredContent: result,
                                         isError: false
@@ -199,10 +211,11 @@ class UCP_WebMCP
                             execute: async function (args) {
                                 try {
                                     const result = await callRestAPI('/discovery', 'GET', null);
+                                    const caps = Object.keys(result.capabilities || {}).join(', ');
                                     return {
                                         content: [{
                                             type: 'text',
-                                            text: `Store: ${result.store_info?.name || 'Unknown'}. Currency: ${result.store_info?.currency || 'N/A'}`
+                                            text: `Store: ${result.store_info?.name || 'Unknown'}\nCurrency: ${result.store_info?.currency || 'N/A'}\nCapabilities: ${caps}`
                                         }],
                                         structuredContent: result,
                                         isError: false
