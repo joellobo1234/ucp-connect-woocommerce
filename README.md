@@ -70,6 +70,17 @@ We provide a ready-to-use connector in the `connectors/` folder.
 4. **Restart Claude.** 
    You can now ask Claude: *"Search for t-shirts on my store"*
 
+### Standard HTTP MCP Clients
+*Target: Custom MCP clients supporting JSON-RPC over HTTP*
+
+This plugin exposes a **native MCP Server endpoint** at:
+`POST /wp-json/ucp/v1/mcp`
+
+Supported Methods:
+*   `initialize`
+*   `tools/list`
+*   `tools/call`
+
 ## 📡 REST API Reference
 
 For developers building custom integrations:
@@ -151,6 +162,9 @@ For more information about UCP, visit: [https://ucp.dev](https://ucp.dev)
 *   Add API Key authentication for authorized agents.
 
 ## Changelog
+
+### 1.2.0
+*   **MCP Server:** Added full support for standard MCP handshake (`initialize`, `notifications/initialized`) and standard method aliases (`tools/list`, `tools/call`). This enables direct compatibility with generic HTTP MCP clients.
 
 ### 1.1.0
 *   **Compliance:** Renamed WebMCP tools to `search_products`, `create_checkout`, `get_discovery` to match UCP standard.
