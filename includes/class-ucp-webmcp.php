@@ -129,7 +129,7 @@ class UCP_WebMCP
                                     const result = await callRestAPI('/search', 'POST', { query: args.query });
                                     const count = result.items?.length || 0;
                                     let text = `Found ${count} products for "${args.query}"`;
-                                    
+
                                     if (count > 0) {
                                         const productList = result.items.map(item => {
                                             const price = item.price ? `${item.price.value} ${item.price.currency}` : 'N/A';
@@ -215,7 +215,7 @@ class UCP_WebMCP
                                     return {
                                         content: [{
                                             type: 'text',
-                                            text: `Store: ${result.store_info?.name || 'Unknown'}\nCurrency: ${result.store_info?.currency || 'N/A'}\nCapabilities: ${caps}`
+                                            text: `Store: ${result.store_info?.name || 'Unknown'}\nLanguage: English\nProtocol: ${result.protocol || 'UCP'} (v${result.version || '0.1.0'})\nCurrency: ${result.store_info?.currency || 'N/A'}\nCapabilities: ${caps}`
                                         }],
                                         structuredContent: result,
                                         isError: false
