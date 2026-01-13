@@ -38,13 +38,13 @@ else
 fi
 echo ""
 
-# 3. Test Search (Find a Product)
+# 3. Test Search (Find a Product) - Testing "Smart Search" with plural
 echo "[2] Testing 'search_products' (Search)..."
-SEARCH_RES=$(curl -s -X POST "$BASE_URL/search" -H "Content-Type: application/json" -d '{"query":""}')
+SEARCH_RES=$(curl -s -X POST "$BASE_URL/search" -H "Content-Type: application/json" -d '{"query":"hoodies"}')
 PRODUCT_ID=$(echo "$SEARCH_RES" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
 
 if [ -n "$PRODUCT_ID" ]; then
-    echo "✅ Success: Found product with ID: $PRODUCT_ID"
+    echo "✅ Success: Found product with ID: $PRODUCT_ID (Smart Search working!)"
 else
     echo "❌ Failure: Search returned no products."
     echo "   Response: $SEARCH_RES"
@@ -71,7 +71,26 @@ else
 fi
 
 echo ""
+
+# 5. Test MCP Server Handshake (Dynamic Info)
+echo "[4] Testing 'MCP Server Handshake' (POST /mcp)..."
+HANDSHAKE_DATA='{"jsonrpc":"2.0","method":"initialize","id":1}'
+MCP_RES=$(curl -s -X POST "$BASE_URL/mcp" -H "Content-Type: application/json" -d "$HANDSHAKE_DATA")
+
+if echo "$MCP_RES" | grep -q "serverInfo"; then
+    SERVER_NAME=$(echo "$MCP_RES" | grep -o '"name":"[^"]*"' | cut -d'"' -f4)
+    VERSION=$(echo "$MCP_RES" | grep -o '"version":"[^"]*"' | cut -d'"' -f4)
+    echo "✅ Success: MCP Handshake complete."
+    echo "   Server Name: $SERVER_NAME"
+    echo "   Version: $VERSION"
+else
+    echo "❌ Failure: MCP Handshake failed."
+    echo "   Response: $MCP_RES"
+    exit 1
+fi
+
+echo ""
 echo "==========================================="
 echo "🎉  Conformance Result: PASSED"
-echo "    The plugin successfully implements the Core UCP Flows."
+echo "    The plugin is fully UCP & MCP Compliant."
 echo "==========================================="

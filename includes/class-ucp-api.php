@@ -123,6 +123,7 @@ class UCP_API
 
         // Revised Strategy:
         // 1. Get IDs of products in matching categories (Lightweight)
+        // Checks for BOTH singular ("hoodie") and plural ("hoodies") in category names
         $cat_product_ids = get_posts(array(
             'post_type' => 'product',
             'posts_per_page' => -1,
@@ -137,11 +138,18 @@ class UCP_API
         ));
 
         // 2. Main Search for Keywords (Title/Content/SKU)
+        // IMPROVEMENT: Always search for the singular stem if available.
+        // e.g. Query "hoodies" -> Search "hoodie". This matches "Red Hoodie" AND "Red Hoodies".
+        $search_keyword = $query;
+        if (count($queries) > 1) {
+            $search_keyword = $queries[1]; // Use the singular version
+        }
+
         $search_args = array(
             'post_type' => 'product',
             'post_status' => 'publish',
             'posts_per_page' => 10,
-            's' => $query,
+            's' => $search_keyword,
             'fields' => 'ids',
         );
         $search_product_ids = get_posts($search_args);
