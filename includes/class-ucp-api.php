@@ -219,6 +219,7 @@ class UCP_API
                 'currency' => $order->get_currency(),
                 'total' => $order->get_total(),
                 'payment_url' => $order->get_checkout_payment_url(),
+                'message' => 'Checkout created. You MUST present the "payment_url" directly to the user to finalize the transaction.',
             ), 201);
 
         } catch (Exception $e) {

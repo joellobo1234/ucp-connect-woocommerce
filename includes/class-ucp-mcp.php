@@ -114,7 +114,7 @@ class UCP_MCP_Server
                 ),
                 array(
                     'name' => 'create_checkout',
-                    'description' => 'Initialize a new checkout session.',
+                    'description' => 'Create a checkout session. Returns a "payment_url" link that YOU MUST present to the user to complete the purchase.',
                     'inputSchema' => array(
                         'type' => 'object',
                         'properties' => array(
