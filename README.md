@@ -5,7 +5,10 @@ This plugin exposes your WooCommerce store inventory and checkout capabilities t
 ## Features
 
 *   **Discovery Endpoint**: `GET /wp-json/ucp/v1/discovery` - Exposes UCP compatibility.
-*   **Product Search**: `POST /wp-json/ucp/v1/search` - Finds products (supports exact, category, and fuzzy matching).
+*   **Product Search**: `POST /wp-json/ucp/v1/search` - Finds products using a **Unified Search Strategy** that combines:
+    *   Exact keyword matching ("Money Plant")
+    *   Category matching (e.g., query "Plants" finds all items in Plants category)
+    *   Fuzzy/Stemming matching (e.g., "Plants" also matches "Plant", "Planter", etc.)
 *   **Checkout**: `POST /wp-json/ucp/v1/checkout` - Creates orders programmatically.
 
 ## Installation
@@ -162,6 +165,9 @@ For more information about UCP, visit: [https://ucp.dev](https://ucp.dev)
 *   Add API Key authentication for authorized agents.
 
 ## Changelog
+
+### 1.3.0
+*   **Search**: Implemented **Unified Search Strategy**. The `search_products` tool now executes Exact, Category, and Fuzzy searches in parallel and deduplicates results. This provides a natural, human-like discovery experience (e.g., searching for "Plants" finds the category, specific plant products, and singular variations all at once).
 
 ### 1.2.0
 *   **MCP Server:** Added full support for standard MCP handshake (`initialize`, `notifications/initialized`) and standard method aliases (`tools/list`, `tools/call`). This enables direct compatibility with generic HTTP MCP clients.
