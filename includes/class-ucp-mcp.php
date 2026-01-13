@@ -87,6 +87,13 @@ class UCP_MCP_Server
             );
         }
 
+        // JSON-RPC 2.0 Specification:
+        // A Notification is a Request object without an "id" member.
+        // The Server MUST NOT reply to a Notification.
+        if ($id === null) {
+            return null; // Don't respond to notifications
+        }
+
         return array(
             'jsonrpc' => '2.0',
             'result' => $result,
