@@ -81,36 +81,52 @@ class UCP_API
         $params = $request->get_json_params();
         $query = isset($params['query']) ? sanitize_text_field($params['query']) : '';
 
-        // 1. First Attempt: Standard Search
-        $args = array(
-            'status' => 'publish',
-            'limit' => 10,
-            's' => $query,
-        );
-        $products = wc_get_products($args);
+        $products = array();
 
-        // 2. Fallback: If no products found, try searching by Category
-        if (empty($products) && !empty($query)) {
+        if (!empty($query)) {
+            // Strategy 1: Exact Search (Standard WC Search)
+            $exact_args = array(
+                'status' => 'publish',
+                'limit' => 10,
+                's' => $query,
+            );
+            $exact_products = wc_get_products($exact_args);
+
+            // Strategy 2: Category Search (Exact Term)
             $cat_args = array(
                 'status' => 'publish',
                 'limit' => 10,
-                'category' => array($query), // Try exact category slug/name match
+                'category' => array($query),
             );
             $cat_products = wc_get_products($cat_args);
-            if (!empty($cat_products)) {
-                $products = $cat_products;
-            }
-        }
 
-        // 3. Fallback: If still no products and query ends in 's', try singular (naive stemming)
-        if (empty($products) && !empty($query) && substr($query, -1) === 's') {
-            $singular_query = substr($query, 0, -1);
-            $stem_args = array(
-                'status' => 'publish',
-                'limit' => 10,
-                's' => $singular_query,
-            );
-            $products = wc_get_products($stem_args);
+            // Strategy 3: Fuzzy / Stemming Search (Singularization)
+            $fuzzy_products = array();
+            if (substr($query, -1) === 's') {
+                $singular_query = substr($query, 0, -1);
+                $fuzzy_args = array(
+                    'status' => 'publish',
+                    'limit' => 10,
+                    's' => $singular_query,
+                );
+                $fuzzy_products = wc_get_products($fuzzy_args);
+            }
+
+            // Merge and Deduplicate Results
+            // We use product ID as key to ensure uniqueness
+            $merged = array();
+
+            foreach ($exact_products as $p) {
+                $merged[$p->get_id()] = $p;
+            }
+            foreach ($cat_products as $p) {
+                $merged[$p->get_id()] = $p;
+            }
+            foreach ($fuzzy_products as $p) {
+                $merged[$p->get_id()] = $p;
+            }
+
+            $products = array_values($merged);
         }
 
         $mapper = new UCP_Mapper();
