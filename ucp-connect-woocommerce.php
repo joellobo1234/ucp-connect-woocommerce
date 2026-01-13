@@ -99,8 +99,26 @@ class UCP_Connect_WooCommerce
 		// Initialize WebMCP for browser-based agents
 		new UCP_WebMCP();
 
+
 		// Initialize MCP server for server-to-server communication
 		add_action('rest_api_init', array($this, 'register_mcp_routes'));
+
+		// Add support for /.well-known/ucp discovery
+		add_action('init', array($this, 'handle_well_known_discovery'));
+	}
+
+	/**
+	 * Handle /.well-known/ucp requests for Agentic Discovery.
+	 */
+	public function handle_well_known_discovery()
+	{
+		if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/.well-known/ucp') !== false) {
+			header('Content-Type: application/json');
+			$api = new UCP_API();
+			$response = $api->get_discovery(new WP_REST_Request());
+			echo json_encode($response->get_data());
+			exit;
+		}
 	}
 
 	/**
