@@ -1,3 +1,7 @@
+> [!WARNING]
+> **For Learning Purposes Only**
+> This plugin was "vibe coded" as an experiment to explore Agentic Commerce concepts. It is **NOT** production-ready and should be used for educational or testing purposes only.
+
 # UCP Connect for WooCommerce: Agentic Commerce Endpoint
 
 ![License](https://img.shields.io/badge/License-GPLv2-blue.svg)
