@@ -5,7 +5,7 @@ This plugin exposes your WooCommerce store inventory and checkout capabilities t
 ## key Features
 
 *   **Discovery Endpoint**: `GET /wp-json/ucp/v1/discovery` - Lets agents know your store is UCP-compatible.
-*   **Product Search**: `POST /wp-json/ucp/v1/search` - Allows agents to find products matching specific queries.
+*   **Product Search**: `POST /wp-json/ucp/v1/search` - Allows agents to find products matches (supports exact match, category match, and fuzzy/stemming).
 *   **Agentic Checkout**: `POST /wp-json/ucp/v1/checkout` - Enables agents to create orders programmatically.
 
 ## Installation
@@ -27,8 +27,9 @@ There are two ways to connect, depending on your agent type:
 1. Install and activate this plugin.
 2. The plugin automatically injects the `navigator.modelContext` API into your store's frontend.
 3. Your browser agent can immediately detect and use the tools:
-   - `ucp_search_products`
-   - `ucp_create_checkout`
+   - `search_products`
+   - `create_checkout`
+   - `get_discovery`
 
 ---
 
@@ -133,6 +134,11 @@ For more information about UCP, visit: [https://ucp.dev](https://ucp.dev)
 *   Add API Key authentication for authorized agents.
 
 ## Changelog
+
+### 1.1.0
+*   **Compliance:** Renamed WebMCP tools to `search_products`, `create_checkout`, `get_discovery` to match UCP standard.
+*   **Discovery:** Enhanced `get_discovery` response with explicit Language ("English") and Protocol version ("UCP v0.1.0").
+*   **Search:** Added Smart Search Fallback (Category match & Singularization) to handle natural language queries like "plants" better.
 
 ### 1.0.1
 *   Fixed: Race condition with WebMCP initialization that caused "Tool dummyTool is already registered" errors when using browser extensions like AWL Tool. The polyfill injection is now delayed until the window load event.
