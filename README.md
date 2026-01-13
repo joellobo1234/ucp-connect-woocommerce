@@ -61,16 +61,19 @@ Add this to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "my-store": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sse",
-        "--url", "https://your-site.com/wp-json/ucp/v1/mcp"
-      ]
+        "command": "npx",
+        "args": [
+            "-y", 
+            "ucp-mcp-proxy", 
+            "https://your-site.com/wp-json/ucp/v1/mcp"
+        ]
     }
   }
 }
 ```
+
+**Why a Proxy?**
+Desktop agents (like Claude) typically communicate over **stdio** (standard input/output), while WordPress provides an **HTTP** endpoint. The `ucp-mcp-proxy` bridge connects these two worlds seamlessly.
 
 _(Note: Ensure your site is publicly accessible via HTTPS.)_
 
