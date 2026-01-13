@@ -1,6 +1,6 @@
 {
     "name": "ucp-mcp-proxy",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "EXPERIMENTAL: Connect AI Agents (Claude Desktop, Cline) to your WooCommerce store via Universal Commerce Protocol (UCP) and Model Context Protocol (MCP). This proxy bridges local stdio MCP clients to remote HTTP UCP endpoints.",
     "main": "index.js",
     "bin": {
