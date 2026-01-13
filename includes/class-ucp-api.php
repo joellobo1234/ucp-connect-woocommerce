@@ -81,15 +81,38 @@ class UCP_API
         $params = $request->get_json_params();
         $query = isset($params['query']) ? sanitize_text_field($params['query']) : '';
 
-        // Use standard WC product query
-        // In a real implementation, we'd parse more complex UCP search filters
+        // 1. First Attempt: Standard Search
         $args = array(
             'status' => 'publish',
             'limit' => 10,
             's' => $query,
         );
-
         $products = wc_get_products($args);
+
+        // 2. Fallback: If no products found, try searching by Category
+        if (empty($products) && !empty($query)) {
+            $cat_args = array(
+                'status' => 'publish',
+                'limit' => 10,
+                'category' => array($query), // Try exact category slug/name match
+            );
+            $cat_products = wc_get_products($cat_args);
+            if (!empty($cat_products)) {
+                $products = $cat_products;
+            }
+        }
+
+        // 3. Fallback: If still no products and query ends in 's', try singular (naive stemming)
+        if (empty($products) && !empty($query) && substr($query, -1) === 's') {
+            $singular_query = substr($query, 0, -1);
+            $stem_args = array(
+                'status' => 'publish',
+                'limit' => 10,
+                's' => $singular_query,
+            );
+            $products = wc_get_products($stem_args);
+        }
+
         $mapper = new UCP_Mapper();
 
         $items = array();
