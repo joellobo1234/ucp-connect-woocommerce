@@ -8,18 +8,18 @@ echo "==========================================="
 echo ""
 
 # 1. Base URL
-BASE_URL="http://localhost:8888/wp-json/ucp/v1"
-# Note: Adjust BASE_URL if your local setup is different (e.g., localhost:3001, etc.)
-# Trying to detect from previous context... assuming standard WP local env or specific port.
-# Let's use a widely compatible check.
-if curl -s "http://localhost:8888" > /dev/null; then
-    BASE_URL="http://localhost:8888/wp-json/ucp/v1"
-elif curl -s "http://localhost:10003" > /dev/null; then # LocalWP default
-    BASE_URL="http://localhost:10003/wp-json/ucp/v1" 
+if [ -z "$BASE_URL" ]; then
+    if curl -s "http://localhost:8888" > /dev/null; then
+        BASE_URL="http://localhost:8888/wp-json/ucp/v1"
+    elif curl -s "http://localhost:10003" > /dev/null; then
+        BASE_URL="http://localhost:10003/wp-json/ucp/v1" 
+    else
+        # Default to standard docker port 8080 if nothing else found
+        echo "⚠️  Could not auto-detect WP URL. Using default: http://localhost:8080"
+        BASE_URL="http://localhost:8080/wp-json/ucp/v1"
+    fi
 else
-    # Fallback/Placeholder - User might need to edit this
-    echo "⚠️  Could not auto-detect WP URL. Using default: http://localhost:8888"
-    BASE_URL="http://localhost:8888/wp-json/ucp/v1"
+     echo "ℹ️  Using configured Base URL: $BASE_URL"
 fi
 
 echo "Target API Base: $BASE_URL"
