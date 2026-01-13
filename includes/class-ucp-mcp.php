@@ -44,15 +44,36 @@ class UCP_MCP_Server
 
         try {
             switch ($method) {
+                case 'initialize':
+                    $result = array(
+                        'protocolVersion' => '2024-11-05',
+                        'capabilities' => array(
+                            'tools' => array('listChanged' => false),
+                            'resources' => array('listChanged' => false),
+                        ),
+                        'serverInfo' => array(
+                            'name' => 'ucp-woocommerce',
+                            'version' => '1.1.0',
+                        ),
+                    );
+                    break;
+                case 'notifications/initialized':
+                    // Client confirming initialization
+                    $result = true;
+                    break;
                 case 'list_tools':
+                case 'tools/list': // Standard MCP
                     $result = $this->list_tools();
                     break;
-                case 'call_tool': // MCP standard
-                case 'tools/call': // Anthropic/OpenAI style sometimes
+                case 'resources/list':
+                    $result = array('resources' => array());
+                    break;
+                case 'call_tool':
+                case 'tools/call': // Standard MCP
                     $result = $this->call_tool($params);
                     break;
                 default:
-                    $error = array('code' => -32601, 'message' => 'Method not found');
+                    $error = array('code' => -32601, 'message' => 'Method not found: ' . $method);
             }
         } catch (Exception $e) {
             $error = array('code' => -32000, 'message' => $e->getMessage());
