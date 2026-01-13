@@ -31,7 +31,7 @@ class UCP_API
         register_rest_route(self::NAMESPACE , '/search', array(
             'methods' => 'POST',
             'callback' => array($this, 'search_products'),
-            'permission_callback' => '__return_true', // Public for now, maybe require API key later
+            'permission_callback' => '__return_true', // Public endpoint
         ));
 
         // Checkout Endpoint
@@ -85,8 +85,8 @@ class UCP_API
             return new WP_REST_Response(array('items' => array()), 200);
         }
 
-        // Optimized Single Query: Searches Title OR Content OR Category
-        // 1. Prepare Fuzzy Logic (Naive Singularization)
+        // Unified Search Strategy: Matches Title, Content, or Category
+        // 1. Singularization: Handle plural queries (e.g. "plants" -> "plant")
         $queries = array($query);
         if (substr($query, -1) === 's') {
             $queries[] = substr($query, 0, -1);
@@ -115,11 +115,9 @@ class UCP_API
             'operator' => 'IN',
         );
 
-        // However, WP_Query with 's' AND 'tax_query' does an intersection (AND). 
-        // To do a true Union (OR), usage of raw filters or separate IDs is needed.
-        // Given the constraints of "Simple but Fast", the most robust method for a plugin
-        // without raw SQL injection is to fetch IDs for categories first (lightweight)
-        // and add them to a keyword search.
+        // Execution Strategy:
+        // We perform a two-step lookup (Category IDs + Keyword IDs) followed by a single hydration step
+        // to maximize performance and ensure accurate "OR" logic across taxonomies and post content.
 
         // Revised Strategy:
         // 1. Get IDs of products in matching categories (Lightweight)
@@ -138,7 +136,7 @@ class UCP_API
         ));
 
         // 2. Main Search for Keywords (Title/Content/SKU)
-        // IMPROVEMENT: Always search for the singular stem if available.
+        // Optimization: Prefer singular stem for broader matching
         // e.g. Query "hoodies" -> Search "hoodie". This matches "Red Hoodie" AND "Red Hoodies".
         $search_keyword = $query;
         if (count($queries) > 1) {
