@@ -81,53 +81,85 @@ class UCP_API
         $params = $request->get_json_params();
         $query = isset($params['query']) ? sanitize_text_field($params['query']) : '';
 
-        $products = array();
-
-        if (!empty($query)) {
-            // Strategy 1: Exact Search (Standard WC Search)
-            $exact_args = array(
-                'status' => 'publish',
-                'limit' => 10,
-                's' => $query,
-            );
-            $exact_products = wc_get_products($exact_args);
-
-            // Strategy 2: Category Search (Exact Term)
-            $cat_args = array(
-                'status' => 'publish',
-                'limit' => 10,
-                'category' => array($query),
-            );
-            $cat_products = wc_get_products($cat_args);
-
-            // Strategy 3: Fuzzy / Stemming Search (Singularization)
-            $fuzzy_products = array();
-            if (substr($query, -1) === 's') {
-                $singular_query = substr($query, 0, -1);
-                $fuzzy_args = array(
-                    'status' => 'publish',
-                    'limit' => 10,
-                    's' => $singular_query,
-                );
-                $fuzzy_products = wc_get_products($fuzzy_args);
-            }
-
-            // Merge and Deduplicate Results
-            // We use product ID as key to ensure uniqueness
-            $merged = array();
-
-            foreach ($exact_products as $p) {
-                $merged[$p->get_id()] = $p;
-            }
-            foreach ($cat_products as $p) {
-                $merged[$p->get_id()] = $p;
-            }
-            foreach ($fuzzy_products as $p) {
-                $merged[$p->get_id()] = $p;
-            }
-
-            $products = array_values($merged);
+        if (empty($query)) {
+            return new WP_REST_Response(array('items' => array()), 200);
         }
+
+        // Optimized Single Query: Searches Title OR Content OR Category
+        // 1. Prepare Fuzzy Logic (Naive Singularization)
+        $queries = array($query);
+        if (substr($query, -1) === 's') {
+            $queries[] = substr($query, 0, -1);
+        }
+
+        $args = array(
+            'post_type' => 'product',
+            'post_status' => 'publish',
+            'posts_per_page' => 10,
+            'tax_query' => array(
+                'relation' => 'OR',
+            ),
+            's' => $query, // Standard Search (Title/Content)
+        );
+
+        // Add Category Search into the mix
+        // Note: standard 's' search in WP doesn't search taxonomy names by default.
+        // To keep this performant and simple without writing raw SQL, we will rely on WC's search 
+        // which matches Title/Content/Excerpt/SKU.
+        // For distinct category matching, we'll append a tax_query.
+
+        $args['tax_query'][] = array(
+            'taxonomy' => 'product_cat',
+            'field' => 'name',
+            'terms' => $queries,
+            'operator' => 'IN',
+        );
+
+        // However, WP_Query with 's' AND 'tax_query' does an intersection (AND). 
+        // To do a true Union (OR), usage of raw filters or separate IDs is needed.
+        // Given the constraints of "Simple but Fast", the most robust method for a plugin
+        // without raw SQL injection is to fetch IDs for categories first (lightweight)
+        // and add them to a keyword search.
+
+        // Revised Strategy:
+        // 1. Get IDs of products in matching categories (Lightweight)
+        $cat_product_ids = get_posts(array(
+            'post_type' => 'product',
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'tax_query' => array(
+                array(
+                    'taxonomy' => 'product_cat',
+                    'field' => 'name',
+                    'terms' => $queries,
+                )
+            )
+        ));
+
+        // 2. Main Search for Keywords (Title/Content/SKU)
+        $search_args = array(
+            'post_type' => 'product',
+            'post_status' => 'publish',
+            'posts_per_page' => 10,
+            's' => $query,
+            'fields' => 'ids',
+        );
+        $search_product_ids = get_posts($search_args);
+
+        // 3. Merge IDs avoiding duplication
+        $all_ids = array_unique(array_merge($cat_product_ids, $search_product_ids));
+
+        // 4. Fetch final objects (limit to 10 for speed)
+        $final_ids = array_slice($all_ids, 0, 10);
+
+        if (empty($final_ids)) {
+            return new WP_REST_Response(array('items' => array()), 200);
+        }
+
+        $products = wc_get_products(array(
+            'include' => $final_ids,
+            'limit' => -1, // We already sliced IDs
+        ));
 
         $mapper = new UCP_Mapper();
 
