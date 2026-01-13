@@ -5,7 +5,7 @@
 # UCP Connect for WooCommerce: Agentic Commerce Endpoint
 
 ![License](https://img.shields.io/badge/License-GPLv2-blue.svg)
-![Version](https://img.shields.io/badge/Version-1.3.0-green.svg)
+![Version](https://img.shields.io/badge/Version-1.3.1-green.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)
 ![WooCommerce](https://img.shields.io/badge/WooCommerce-Active-violet.svg)
 
