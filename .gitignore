@@ -1,0 +1,21 @@
+# System
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build artifacts
+*.zip
+*.tar.gz
+
+# Dev Scripts & Tools
+verify_ucp_conformance.sh
+test/
+tests/
+.vscode/
+.idea/
+
+# Logs
+*.log
