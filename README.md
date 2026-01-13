@@ -1,181 +1,113 @@
-# UCP Connect for WooCommerce
+# UCP Connect for WooCommerce: Agentic Commerce Endpoint
 
-This plugin exposes your WooCommerce store inventory and checkout capabilities to the **Universal Commerce Protocol (UCP)** network, allowing AI agents to discover, search, and purchase products from your site.
+![License](https://img.shields.io/badge/License-GPLv2-blue.svg)
+![Version](https://img.shields.io/badge/Version-1.3.0-green.svg)
+![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)
+![WooCommerce](https://img.shields.io/badge/WooCommerce-Active-violet.svg)
 
-## Features
+**Turn your WooCommerce store into an AI-ready commerce powerhouse.**
 
-*   **Discovery Endpoint**: `GET /wp-json/ucp/v1/discovery` - Exposes UCP compatibility.
-*   **Product Search**: `POST /wp-json/ucp/v1/search` - Finds products using a **Unified Search Strategy** that combines:
-    *   Exact keyword matching ("Money Plant")
-    *   Category matching (e.g., query "Plants" finds all items in Plants category)
-    *   Fuzzy/Stemming matching (e.g., "Plants" also matches "Plant", "Planter", etc.)
-*   **Checkout**: `POST /wp-json/ucp/v1/checkout` - Creates orders programmatically.
-
-## Installation
-
-1.  Upload the `ucp-connect-woocommerce` folder to your `/wp-content/plugins/` directory.
-2.  Activate the plugin through the 'Plugins' menu in WordPress.
-3.  Your UCP endpoints are now live under `/wp-json/ucp/v1/`.
-
-## Agent Integration
-
-Connects WooCommerce to AI agents via two methods:
-
-### Browser Agents (WebMCP)
-*Target: Chrome Extensions, Web Chatbots*
-
-**Automatic Setup**:
-1. Install and activate this plugin.
-2. The plugin injects the `navigator.modelContext` API (via `@mcp-b/global`).
-3. Your browser agent can immediately detect and use the tools:
-   - `search_products`
-   - `create_checkout`
-   - `get_discovery`
+UCP Connect for WooCommerce bridges the gap between traditional e-commerce and the new wave of **Agentic AI**. It exposes your inventory capabilities via the **Universal Commerce Protocol (UCP)** and **Model Context Protocol (MCP)**, allowing AI agents—from browser-based assistants to powerful desktop models like Claude—to seamlessly discover, search, and purchase products from your catalog.
 
 ---
 
-### Desktop Agents (MCP Server)
-*Target: Claude Desktop, VS Code, Cursor*
+## 🚀 Why This Matters
 
-Desktop apps require a local connector bridge.
+The way users shop is evolving. Instead of browsing categories, they are asking agents: *"Find me a red hoodie and some matching sneakers."*
 
-We provide a ready-to-use connector in the `connectors/` folder.
+Most stores are invisible to these agents. **UCP Connect** makes your store visible, interpretable, and actionable.
 
-#### **Quick Setup for Claude Desktop:**
+### Key Capabilities
+- **🔎 Unified "Smart" Search**: Intelligent search logic that understands natural language. It handles singular/plural variations (finding "hoodie" when asked for "hoodies") and understands categories, ensuring agents never hit a dead end.
+- **🛒 Programmatic Checkout**: Agents can build carts and generate secure, one-click checkout links for users to complete the purchase.
+- **🤖 Dual-Protocol Support**:
+    - **WebMCP**: For browser-based agents (Chrome Extensions, Web Chatbots).
+    - **Native MCP Server**: For server-side agents (Claude Desktop, VS Code, Custom Clients).
 
-1. **Locate the connector:**
-   Inside this plugin's folder: `connectors/desktop-mcp-server/`
+---
 
-2. **Install dependencies (One-time):**
-   ```bash
-   cd connectors/desktop-mcp-server
-   npm install
-   ```
+## 📦 Installation
 
-3. **Configure Claude Desktop:**
-   Edit your config file (e.g., `~/Library/Application Support/Claude/claude_desktop_config.json`) and add:
+1.  Download the latest release zip.
+2.  Upload the `ucp-connect-woocommerce` folder to your `/wp-content/plugins/` directory.
+3.  Activate the plugin through the 'Plugins' menu in WordPress.
+4.  **That's it.** Your store is now live on the Universal Commerce Protocol network.
 
-   ```json
-   {
-     "mcpServers": {
-       "my-wordpress-store": {
-         "command": "node",
-         "args": [
-           "/ABSOLUTE/PATH/TO/connectors/desktop-mcp-server/index.js",
-           "--url", "https://your-wordpress-site.com"
-         ]
-       }
-     }
-   }
-   ```
-   *(Replace `/ABSOLUTE/PATH/TO/...` with the real path on your machine)*
+---
 
-4. **Restart Claude.** 
-   You can now ask Claude: *"Search for t-shirts on my store"*
+## 🛠️ Usage & Integration
 
-### Standard HTTP MCP Clients
-*Target: Custom MCP clients supporting JSON-RPC over HTTP*
+### For Browser Agents (WebMCP)
+*Target: Chrome Extensions, Web Chatbots*
 
-This plugin exposes a **native MCP Server endpoint** at:
-`POST /wp-json/ucp/v1/mcp`
+The plugin automatically injects the standard `@mcp-b/global` polyfill. No configuration is required. Agents visiting your site will automatically detect the following tools:
+- `search_products(query)`
+- `create_checkout(items)`
+- `get_discovery()`
 
-Supported Methods:
-*   `initialize`
-*   `tools/list`
-*   `tools/call`
+### For Desktop Agents (Claude Desktop, etc.)
+*Target: Claude, IDEs, Custom RAG pipelines*
 
-## 📡 REST API Reference
+You can connect powerful desktop agents directly to your store's native MCP endpoint.
 
-For developers building custom integrations:
+**Configuring Claude Desktop:**
+Add this to your `claude_desktop_config.json`:
 
-### Discovery
-```http
-GET /wp-json/ucp/v1/discovery
-```
-
-### Search
-```http
-POST /wp-json/ucp/v1/search
-Content-Type: application/json
-
+```json
 {
-  "query": "hoodie"
+  "mcpServers": {
+    "my-store": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sse",
+        "--url", "https://your-site.com/wp-json/ucp/v1/mcp"
+      ]
+    }
+  }
 }
 ```
 
-### Checkout
-```http
-POST /wp-json/ucp/v1/checkout
-Content-Type: application/json
+_(Note: Ensure your site is publicly accessible via HTTPS.)_
 
-{
-  "items": [
-    { "id": 123, "quantity": 1 }
-  ]
-}
-```
+---
 
-## Verification Prompts
+## 📡 API Reference
 
-Use this sequence to verify the agent's capability to search and purchase products.
+For developers building custom connectors, the plugin exposes standard REST endpoints compatible with the UCP spec.
 
-**1. Discovery**
-> "Hello! Can you check `get_discovery` to tell me what protocol this store uses and what its capabilities are?"
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/wp-json/ucp/v1/discovery` | `GET` | Returns store capabilities and protocol version. |
+| `/wp-json/ucp/v1/search` | `POST` | Semantic-aware product search. |
+| `/wp-json/ucp/v1/checkout` | `POST` | Creates a checkout session & payment link. |
 
-*Success:* Agent confirms UCP protocol (v0.1.0) and lists capabilities (search, checkout).
+---
 
-**2. Search**
-> "Please search for 'plants' and list the available options with their prices."
+## 🧪 Testing Your Endpoint
 
-*Success:* Agent lists found products (e.g., "Money Plant - $20").
+You can verify your store's agent readiness using a simple prompt with any UCP-compatible agent:
 
-**3. Checkout**
-> "I would like to buy 2 Money Plants. Please create a checkout session for me."
+> **"Use `get_discovery` to check what this store sells, then find a product related to 'shoes' and create a checkout link for it."**
 
-*Success:* Agent returns an Order ID, Total Cost, and a Payment Link.
+If the agent returns a valid payment URL, your integration is 100% functional.
 
-## Privacy & External Services
+---
 
-This plugin provides functionality to expose your WooCommerce store data to AI agents and external systems via the Universal Commerce Protocol (UCP).
+## 🔒 Privacy & Compliance
 
-### Data Exposure
-When this plugin is activated, the following data is made available via public REST API endpoints:
-- Product catalog information (names, prices, descriptions, images)
-- Store information (name, currency)
-- Order creation capabilities
+This plugin is built with privacy by design:
+- **Public Data Only**: It only exposes public catalog data (products, prices).
+- **Secure Handling**: No customer PII is stored by the plugin. Checkout happens on your secure WooCommerce payment pages.
+- **Transparent**: It loads the standard `@mcp-b/global` library from `unpkg.com` to facilitate browser agent communication.
 
-### External Service - WebMCP
-To enable browser-based AI agents, this plugin loads the `@mcp-b/global` JavaScript library from unpkg.com CDN on your site's frontend. This is a standard polyfill that implements the Web Model Context API.
+---
 
-**What is loaded:** `https://unpkg.com/@mcp-b/global@latest/dist/index.iife.js`
-**Purpose:** Exposes commerce tools to browser-based AI assistants
-**Privacy:** The CDN provider (unpkg.com) may log HTTP requests for this file as part of normal CDN operation. No personal user data is transmitted to this service.
+## 🤝 Contributing
 
-By activating this plugin, you consent to:
-1. Making your product catalog publicly discoverable via UCP endpoints
-2. Loading the @mcp-b/global polyfill from unpkg.com CDN
-3. Allowing AI agents to interact with your store's commerce capabilities
+We welcome contributions! This project is open source and compliant with WordPress.org standards.
+1. Fork the repo.
+2. Create a feature branch.
+3. Submit a Pull Request.
 
-For more information about UCP, visit: [https://ucp.dev](https://ucp.dev)
-
-## Future Roadmap
-
-*   Implement full UCP JSON Schema validation.
-*   Add support for `fulfillment` and `payment` protocol messages.
-*   Add API Key authentication for authorized agents.
-
-## Changelog
-
-### 1.3.0
-*   **Search**: Implemented **Unified Search Strategy**. The `search_products` tool now executes Exact, Category, and Fuzzy searches in parallel and deduplicates results. This provides a natural, human-like discovery experience (e.g., searching for "Plants" finds the category, specific plant products, and singular variations all at once).
-
-### 1.2.0
-*   **MCP Server:** Added full support for standard MCP handshake (`initialize`, `notifications/initialized`) and standard method aliases (`tools/list`, `tools/call`). This enables direct compatibility with generic HTTP MCP clients.
-
-### 1.1.0
-*   **Compliance:** Renamed WebMCP tools to `search_products`, `create_checkout`, `get_discovery` to match UCP standard.
-*   **Discovery:** Enhanced `get_discovery` response with explicit Language ("English") and Protocol version ("UCP v0.1.0").
-*   **Search:** Added Smart Search Fallback (Category match & Singularization) to handle natural language queries like "plants" better.
-
-### 1.0.1
-*   Fixed: Race condition with WebMCP initialization that caused "Tool dummyTool is already registered" errors when using browser extensions like AWL Tool. The polyfill injection is now delayed until the window load event.
+**License**: GPLv2 or later.
