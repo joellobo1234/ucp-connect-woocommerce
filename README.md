@@ -55,6 +55,9 @@ The plugin automatically injects the standard `@mcp-b/global` polyfill. No confi
 You can connect powerful desktop agents directly to your store's native MCP endpoint.
 
 **Configuring Claude Desktop:**
+
+To connect your desktop agent, you need to use our [official proxy package on NPM](https://www.npmjs.com/package/ucp-mcp-proxy).
+
 Add this to your `claude_desktop_config.json`:
 
 ```json
