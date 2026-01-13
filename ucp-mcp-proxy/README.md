@@ -2,6 +2,9 @@
 
 A simple proxy connector that allows local AI agents (Claude Desktop, Cline, etc.) to communicate with UCP-enabled WordPress sites via the Model Context Protocol (MCP).
 
+> **⚠️ EDUCATIONAL PURPOSES ONLY**  
+> This package is a demonstration of the **Universal Commerce Protocol (UCP)** and **Model Context Protocol (MCP)** integration. It is intended for learning, testing, and development. **Do not use this in a mission-critical or high-security production environment.**
+
 ## 🚀 How to Use
 
 You do not need to install this globally. You can run it directly using `npx`.
