@@ -2,11 +2,11 @@
 
 This plugin exposes your WooCommerce store inventory and checkout capabilities to the **Universal Commerce Protocol (UCP)** network, allowing AI agents to discover, search, and purchase products from your site.
 
-## key Features
+## Features
 
-*   **Discovery Endpoint**: `GET /wp-json/ucp/v1/discovery` - Lets agents know your store is UCP-compatible.
-*   **Product Search**: `POST /wp-json/ucp/v1/search` - Allows agents to find products matches (supports exact match, category match, and fuzzy/stemming).
-*   **Agentic Checkout**: `POST /wp-json/ucp/v1/checkout` - Enables agents to create orders programmatically.
+*   **Discovery Endpoint**: `GET /wp-json/ucp/v1/discovery` - Exposes UCP compatibility.
+*   **Product Search**: `POST /wp-json/ucp/v1/search` - Finds products (supports exact, category, and fuzzy matching).
+*   **Checkout**: `POST /wp-json/ucp/v1/checkout` - Creates orders programmatically.
 
 ## Installation
 
@@ -14,18 +14,16 @@ This plugin exposes your WooCommerce store inventory and checkout capabilities t
 2.  Activate the plugin through the 'Plugins' menu in WordPress.
 3.  Your UCP endpoints are now live under `/wp-json/ucp/v1/`.
 
-## 🤖 Using for AI Agent Development
+## Agent Integration
 
-This plugin allows AI agents to "talk" to your WooCommerce store using the **Universal Commerce Protocol (UCP)**.
+Connects WooCommerce to AI agents via two methods:
 
-There are two ways to connect, depending on your agent type:
+### Browser Agents (WebMCP)
+*Target: Chrome Extensions, Web Chatbots*
 
-### **Scenario A: Browser Agents (Web-based)**
-*Examples: Chrome Extensions, Web-based Chatbots, Custom Web UIs*
-
-**It Just Works™**. No extra setup required!
+**Automatic Setup**:
 1. Install and activate this plugin.
-2. The plugin automatically injects the `navigator.modelContext` API into your store's frontend.
+2. The plugin injects the `navigator.modelContext` API (via `@mcp-b/global`).
 3. Your browser agent can immediately detect and use the tools:
    - `search_products`
    - `create_checkout`
@@ -33,10 +31,10 @@ There are two ways to connect, depending on your agent type:
 
 ---
 
-### **Scenario B: Desktop Agents (Local)**
-*Examples: Claude Desktop App, Cline (VS Code), Cursor*
+### Desktop Agents (MCP Server)
+*Target: Claude Desktop, VS Code, Cursor*
 
-Because desktop apps run on your computer and cannot securely "inject" into a remote website, you need a small **connector bridge** to link them to your store.
+Desktop apps require a local connector bridge.
 
 We provide a ready-to-use connector in the `connectors/` folder.
 
@@ -102,6 +100,25 @@ Content-Type: application/json
   ]
 }
 ```
+
+## Verification Prompts
+
+Use this sequence to verify the agent's capability to search and purchase products.
+
+**1. Discovery**
+> "Hello! Can you check `get_discovery` to tell me what protocol this store uses and what its capabilities are?"
+
+*Success:* Agent confirms UCP protocol (v0.1.0) and lists capabilities (search, checkout).
+
+**2. Search**
+> "Please search for 'plants' and list the available options with their prices."
+
+*Success:* Agent lists found products (e.g., "Money Plant - $20").
+
+**3. Checkout**
+> "I would like to buy 2 Money Plants. Please create a checkout session for me."
+
+*Success:* Agent returns an Order ID, Total Cost, and a Payment Link.
 
 ## Privacy & External Services
 
