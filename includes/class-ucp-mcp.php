@@ -52,8 +52,8 @@ class UCP_MCP_Server
                             'resources' => array('listChanged' => false),
                         ),
                         'serverInfo' => array(
-                            'name' => 'ucp-woocommerce',
-                            'version' => '1.1.0',
+                            'name' => get_bloginfo('name'),
+                            'version' => UCP_CONNECT_VERSION,
                         ),
                     );
                     break;
