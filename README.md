@@ -23,6 +23,7 @@ Most stores are invisible to these agents. **UCP Connect** makes your store visi
 
 ### Key Capabilities
 - **🔎 Unified "Smart" Search**: Intelligent search logic that understands natural language. It handles singular/plural variations (finding "hoodie" when asked for "hoodies") and understands categories, ensuring agents never hit a dead end.
+- **📜 List All Products**: Simply pass an empty query to `search_products("")` to retrieve the entire product catalog (paginated).
 - **🛒 Programmatic Checkout**: Agents can build carts and generate secure, one-click checkout links for users to complete the purchase.
 - **🤖 Dual-Protocol Support**:
     - **WebMCP**: For browser-based agents (Chrome Extensions, Web Chatbots).

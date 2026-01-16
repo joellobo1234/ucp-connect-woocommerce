@@ -82,81 +82,63 @@ class UCP_API
         $query = isset($params['query']) ? sanitize_text_field($params['query']) : '';
 
         if (empty($query)) {
-            return new WP_REST_Response(array('items' => array()), 200);
-        }
+            // No query? Return all products.
+            $final_ids = get_posts(array(
+                'post_type' => 'product',
+                'post_status' => 'publish',
+                'posts_per_page' => -1,
+                'fields' => 'ids',
+            ));
+        } else {
+            // Unified Search Strategy: Matches Title, Content, or Category
+            // 1. Singularization: Handle plural queries (e.g. "plants" -> "plant")
+            $queries = array($query);
+            if (substr($query, -1) === 's') {
+                $queries[] = substr($query, 0, -1);
+            }
 
-        // Unified Search Strategy: Matches Title, Content, or Category
-        // 1. Singularization: Handle plural queries (e.g. "plants" -> "plant")
-        $queries = array($query);
-        if (substr($query, -1) === 's') {
-            $queries[] = substr($query, 0, -1);
-        }
+            // Execution Strategy:
+            // We perform a two-step lookup (Category IDs + Keyword IDs) followed by a single hydration step
+            // to maximize performance and ensure accurate "OR" logic across taxonomies and post content.
 
-        $args = array(
-            'post_type' => 'product',
-            'post_status' => 'publish',
-            'posts_per_page' => 10,
-            'tax_query' => array(
-                'relation' => 'OR',
-            ),
-            's' => $query, // Standard Search (Title/Content)
-        );
-
-        // Add Category Search into the mix
-        // Note: standard 's' search in WP doesn't search taxonomy names by default.
-        // To keep this performant and simple without writing raw SQL, we will rely on WC's search 
-        // which matches Title/Content/Excerpt/SKU.
-        // For distinct category matching, we'll append a tax_query.
-
-        $args['tax_query'][] = array(
-            'taxonomy' => 'product_cat',
-            'field' => 'name',
-            'terms' => $queries,
-            'operator' => 'IN',
-        );
-
-        // Execution Strategy:
-        // We perform a two-step lookup (Category IDs + Keyword IDs) followed by a single hydration step
-        // to maximize performance and ensure accurate "OR" logic across taxonomies and post content.
-
-        // Revised Strategy:
-        // 1. Get IDs of products in matching categories (Lightweight)
-        // Checks for BOTH singular ("hoodie") and plural ("hoodies") in category names
-        $cat_product_ids = get_posts(array(
-            'post_type' => 'product',
-            'posts_per_page' => -1,
-            'fields' => 'ids',
-            'tax_query' => array(
-                array(
-                    'taxonomy' => 'product_cat',
-                    'field' => 'name',
-                    'terms' => $queries,
+            // 1. Get IDs of products in matching categories (Lightweight)
+            // Checks for BOTH singular ("hoodie") and plural ("hoodies") in category names
+            $cat_product_ids = get_posts(array(
+                'post_type' => 'product',
+                'posts_per_page' => -1,
+                'fields' => 'ids',
+                'tax_query' => array(
+                    array(
+                        'taxonomy' => 'product_cat',
+                        'field' => 'name',
+                        'terms' => $queries,
+                    )
                 )
-            )
-        ));
+            ));
 
-        // 2. Main Search for Keywords (Title/Content/SKU)
-        // Optimization: Prefer singular stem for broader matching
-        // e.g. Query "hoodies" -> Search "hoodie". This matches "Red Hoodie" AND "Red Hoodies".
-        $search_keyword = $query;
-        if (count($queries) > 1) {
-            $search_keyword = $queries[1]; // Use the singular version
+            // 2. Main Search for Keywords (Title/Content/SKU)
+            // Optimization: Prefer singular stem for broader matching
+            // e.g. Query "hoodies" -> Search "hoodie". This matches "Red Hoodie" AND "Red Hoodies".
+            $search_keyword = $query;
+            if (count($queries) > 1) {
+                $search_keyword = $queries[1]; // Use the singular version
+            }
+
+            $search_args = array(
+                'post_type' => 'product',
+                'post_status' => 'publish',
+                'posts_per_page' => 10,
+                's' => $search_keyword,
+                'fields' => 'ids',
+            );
+            $search_product_ids = get_posts($search_args);
+
+            // 3. Merge IDs avoiding duplication
+            $all_ids = array_unique(array_merge($cat_product_ids, $search_product_ids));
+
+            // 4. Fetch final objects (limit to 10 for speed)
+            $final_ids = array_slice($all_ids, 0, 10);
         }
-
-        $search_args = array(
-            'post_type' => 'product',
-            'post_status' => 'publish',
-            'posts_per_page' => 10,
-            's' => $search_keyword,
-            'fields' => 'ids',
-        );
-        $search_product_ids = get_posts($search_args);
-
-        // 3. Merge IDs avoiding duplication
-        $all_ids = array_unique(array_merge($cat_product_ids, $search_product_ids));
-
-        // 4. Fetch final objects (limit to 10 for speed)
-        $final_ids = array_slice($all_ids, 0, 10);
 
         if (empty($final_ids)) {
             return new WP_REST_Response(array('items' => array()), 200);
