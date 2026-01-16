@@ -113,13 +113,13 @@ class UCP_WebMCP
                     const ucpTools = [
                         {
                             name: 'search_products',
-                            description: 'Search for products in this WooCommerce store. Returns a list of products matching the query.',
+                            description: 'Search for products in this WooCommerce store. Returns a list of products matching the query. Pass an empty string "" to list all products.',
                             inputSchema: {
                                 type: 'object',
                                 properties: {
                                     query: {
                                         type: 'string',
-                                        description: 'Search query (e.g., "running shoes", "leather jacket")'
+                                        description: 'Search query (e.g., "running shoes", "leather jacket"). Leave empty to list all products.'
                                     }
                                 },
                                 required: ['query']
@@ -159,7 +159,7 @@ class UCP_WebMCP
                         },
                         {
                             name: 'create_checkout',
-                            description: 'Create a new checkout session with selected products. Returns a checkout URL for completing the purchase.',
+                            description: 'Create a new checkout session with selected products. Returns a checkout URL and automatically redirects the user to complete the purchase.',
                             inputSchema: {
                                 type: 'object',
                                 properties: {
@@ -182,10 +182,17 @@ class UCP_WebMCP
                                 try {
                                     const result = await callRestAPI('/checkout', 'POST', { items: args.items });
                                     const total = result.total ? `${result.total} ${result.currency}` : 'Pending';
+
+                                    // Automatic Redirect
+                                    if (result.payment_url) {
+                                        console.log('[UCP Connect] Redirecting to checkout:', result.payment_url);
+                                        window.location.href = result.payment_url;
+                                    }
+
                                     return {
                                         content: [{
                                             type: 'text',
-                                            text: `Checkout created successfully!\nOrder ID: ${result.order_id}\nTotal: ${total}\nPayment URL: ${result.payment_url}`
+                                            text: `Checkout created successfully!\nOrder ID: ${result.order_id}\nTotal: ${total}\nPayment URL: ${result.payment_url}\n\nRedirecting you to payment page...`
                                         }],
                                         structuredContent: result,
                                         isError: false
