@@ -114,20 +114,74 @@ class UCP_Cart_Manager
     /**
      * Get response data from current cart.
      */
+    /**
+     * Set shipping address to calculate taxes and shipping.
+     */
+    public function set_shipping_address($address)
+    {
+        $customer = WC()->customer;
+
+        if (isset($address['first_name']))
+            $customer->set_shipping_first_name($address['first_name']);
+        if (isset($address['last_name']))
+            $customer->set_shipping_last_name($address['last_name']);
+        if (isset($address['address_line1']))
+            $customer->set_shipping_address_1($address['address_line1']);
+        if (isset($address['address_line2']))
+            $customer->set_shipping_address_2($address['address_line2']);
+        if (isset($address['city']))
+            $customer->set_shipping_city($address['city']);
+        if (isset($address['region']))
+            $customer->set_shipping_state($address['region']);
+        if (isset($address['postal_code']))
+            $customer->set_shipping_postcode($address['postal_code']);
+        if (isset($address['country']))
+            $customer->set_shipping_country($address['country']);
+
+        // Also set billing to match if not provided (simplification for UCP)
+        if (isset($address['country']))
+            $customer->set_billing_country($address['country']);
+        if (isset($address['postal_code']))
+            $customer->set_billing_postcode($address['postal_code']);
+
+        $customer->save();
+        WC()->cart->calculate_shipping();
+        WC()->cart->calculate_totals();
+
+        if (WC()->session) {
+            WC()->session->save_data();
+        }
+    }
+
+    /**
+     * Get response data from current cart.
+     */
     public function get_cart_response()
     {
         WC()->cart->calculate_totals();
 
-        $total = WC()->cart->total; // Raw total string with formatting often, use numeric if needed
+        // Ensure shipping packages are calculated if address is present
+        if (WC()->customer->get_shipping_country()) {
+            WC()->cart->calculate_shipping();
+        }
 
         return array(
-            'id' => base64_encode($this->auth_token), // Encode token as ID
-            'status' => 'cart', // Virtual status
+            'id' => base64_encode($this->auth_token),
+            'status' => 'cart',
             'currency' => get_woocommerce_currency(),
-            'total' => (float) strip_tags(html_entity_decode(WC()->cart->get_total())), // Sanitize just in case
+            'total' => (float) strip_tags(html_entity_decode(WC()->cart->get_total())),
             'subtotal' => (float) WC()->cart->get_subtotal(),
-            'payment_url' => '', // No payment URL for carts yet (until converted)
-            'line_items' => $this->get_cart_items()
+            'tax_total' => (float) WC()->cart->get_total_tax(),
+            'shipping_total' => (float) WC()->cart->get_shipping_total(),
+            'discount_total' => (float) WC()->cart->get_discount_total(),
+            'applied_coupons' => WC()->cart->get_applied_coupons(),
+            'payment_url' => '',
+            'line_items' => $this->get_cart_items(),
+            'shipping_address' => array(
+                'city' => WC()->customer->get_shipping_city(),
+                'country' => WC()->customer->get_shipping_country(),
+                'postal_code' => WC()->customer->get_shipping_postcode(),
+            )
         );
     }
 

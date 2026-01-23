@@ -41,6 +41,13 @@ class UCP_API
             'permission_callback' => '__return_true',
         ));
 
+        // Discounts Endpoint: List
+        register_rest_route(self::NAMESPACE , '/discounts', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'get_discounts'),
+            'permission_callback' => '__return_true',
+        ));
+
         // Checkout Endpoint: Update
         register_rest_route(self::NAMESPACE , '/checkout/(?P<id>\d+)', array(
             'methods' => 'POST',
@@ -92,11 +99,51 @@ class UCP_API
                     'schema' => 'https://ucp.dev/schemas/shopping/checkout.json',
                     'method' => 'POST',
                 ),
+                'shopping.discounts' => array(
+                    'version' => '2026-01-23',
+                    'endpoint' => '/ucp/v1/discounts',
+                    'method' => 'GET',
+                ),
             ),
             'store_info' => array(
                 'name' => get_bloginfo('name'),
                 'currency' => get_woocommerce_currency(),
             ),
+        ), 200);
+    }
+
+    /**
+     * GET /discounts
+     * Returns active public coupons.
+     */
+    public function get_discounts($request)
+    {
+        $args = array(
+            'post_type' => 'shop_coupon',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+        );
+
+        $coupons = get_posts($args);
+        $available_coupons = array();
+
+        foreach ($coupons as $post) {
+            $coupon = new WC_Coupon($post->ID);
+
+            // Skip expired or private logic could go here
+            // For now, listing valid published coupons
+
+            $available_coupons[] = array(
+                'code' => $coupon->get_code(),
+                'amount' => $coupon->get_amount(),
+                'type' => $coupon->get_discount_type(), // percent, fixed_cart, etc
+                'description' => $post->post_excerpt ? $post->post_excerpt : 'Discount code: ' . $coupon->get_code(),
+            );
+        }
+
+        return new WP_REST_Response(array(
+            'discounts' => $available_coupons,
+            'count' => count($available_coupons)
         ), 200);
     }
 
@@ -236,8 +283,20 @@ class UCP_API
                 $cart->set_items($params['items']);
             }
 
-            if (isset($params['discount_codes'])) {
-                $cart->set_coupons($params['discount_codes']);
+            if (isset($params['shipping_address'])) {
+                $cart->set_shipping_address($params['shipping_address']);
+            }
+
+            // Support both UCP standard nested structure and flat structure
+            $codes = array();
+            if (isset($params['discounts']) && isset($params['discounts']['codes'])) {
+                $codes = $params['discounts']['codes'];
+            } elseif (isset($params['discount_codes'])) {
+                $codes = $params['discount_codes'];
+            }
+
+            if (!empty($codes)) {
+                $cart->set_coupons($codes);
             }
 
             return new WP_REST_Response($cart->get_cart_response(), 200);

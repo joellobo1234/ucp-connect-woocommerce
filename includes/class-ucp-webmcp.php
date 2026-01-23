@@ -184,7 +184,7 @@ class UCP_WebMCP
                         },
                         {
                             name: 'create_checkout',
-                            description: 'Create a new checkout session with selected products. Returns a checkout URL and automatically redirects the user to complete the purchase.',
+                            description: 'Create a new checkout session with selected products. Returns a Cart Token (ID) and initial totals.',
                             inputSchema: {
                                 type: 'object',
                                 properties: {
@@ -195,7 +195,7 @@ class UCP_WebMCP
                                             type: 'object',
                                             properties: {
                                                 id: { type: ['integer', 'string'], description: 'Product ID' },
-                                                quantity: { type: 'integer', description: 'Quantity to purchase' }
+                                                quantity: { type: 'integer', description: 'Quantity' }
                                             },
                                             required: ['id', 'quantity']
                                         }
@@ -208,26 +208,104 @@ class UCP_WebMCP
                                     const result = await callRestAPI('/checkout', 'POST', { items: args.items });
                                     const total = result.total ? `${result.total} ${result.currency}` : 'Pending';
 
-                                    // Automatic Redirect
-                                    if (result.payment_url) {
-                                        console.log('[UCP Connect] Redirecting to checkout:', result.payment_url);
-                                        window.location.href = result.payment_url;
-                                    }
-
                                     return {
                                         content: [{
                                             type: 'text',
-                                            text: `Checkout created successfully!\nOrder ID: ${result.order_id}\nTotal: ${total}\nPayment URL: ${result.payment_url}\n\nRedirecting you to payment page...`
+                                            text: `Cart Created! ID: ${result.id}\nTotal: ${total}\n\nYou can now use 'update_checkout' to add shipping address or discounts, or 'complete_checkout' to pay.`
                                         }],
                                         structuredContent: result,
                                         isError: false
                                     };
                                 } catch (error) {
                                     return {
+                                        content: [{ type: 'text', text: 'Error creating checkout: ' + error.message }],
+                                        isError: true
+                                    };
+                                }
+                            }
+                        },
+                        {
+                            name: 'update_checkout',
+                            description: 'Update an existing checkout with shipping address, discounts, or new items.',
+                            inputSchema: {
+                                type: 'object',
+                                properties: {
+                                    id: { type: 'string', description: 'Cart Token/ID returned from create_checkout' },
+                                    shipping_address: {
+                                        type: 'object',
+                                        description: 'Shipping address for tax/shipping calculation',
+                                        properties: {
+                                            first_name: { type: 'string' },
+                                            last_name: { type: 'string' },
+                                            address_line1: { type: 'string' },
+                                            city: { type: 'string' },
+                                            region: { type: 'string', description: 'State/Province' },
+                                            country: { type: 'string', description: '2-letter ISO code (e.g. US, CA)' },
+                                            postal_code: { type: 'string' }
+                                        }
+                                    },
+                                    discounts: {
+                                        type: 'object',
+                                        properties: {
+                                            codes: { type: 'array', items: { type: 'string' } }
+                                        }
+                                    }
+                                },
+                                required: ['id']
+                            },
+                            execute: async function (args) {
+                                try {
+                                    const result = await callRestAPI(`/checkout/${encodeURIComponent(args.id)}`, 'POST', args);
+                                    
+                                    let summary = `Cart Updated!\nTotal: ${result.total} ${result.currency}`;
+                                    if (result.shipping_total > 0) summary += `\nShipping: ${result.shipping_total}`;
+                                    if (result.tax_total > 0) summary += `\nTax: ${result.tax_total}`;
+                                    if (result.discount_total > 0) summary += `\nDiscounts: -${result.discount_total}`;
+
+                                    return {
+                                        content: [{ type: 'text', text: summary }],
+                                        structuredContent: result,
+                                        isError: false
+                                    };
+                                } catch (error) {
+                                    return {
+                                        content: [{ type: 'text', text: 'Error updating checkout: ' + error.message }],
+                                        isError: true
+                                    };
+                                }
+                            }
+                        },
+                        {
+                            name: 'complete_checkout',
+                            description: 'Finalize the checkout and get a payment link.',
+                            inputSchema: {
+                                type: 'object',
+                                properties: {
+                                    id: { type: 'string', description: 'Cart Token/ID' }
+                                },
+                                required: ['id']
+                            },
+                            execute: async function (args) {
+                                try {
+                                    const result = await callRestAPI(`/checkout/${encodeURIComponent(args.id)}/complete`, 'POST', {});
+                                    
+                                    // Automatic Redirect
+                                    if (result.continue_url) {
+                                        console.log('[UCP Connect] Redirecting to payment:', result.continue_url);
+                                        window.location.href = result.continue_url;
+                                    }
+
+                                    return {
                                         content: [{
                                             type: 'text',
-                                            text: 'Error creating checkout: ' + error.message
+                                            text: `Order Created! Redirecting to payment...\nURL: ${result.continue_url}`
                                         }],
+                                        structuredContent: result,
+                                        isError: false
+                                    };
+                                } catch (error) {
+                                    return {
+                                        content: [{ type: 'text', text: 'Error completing checkout: ' + error.message }],
                                         isError: true
                                     };
                                 }
@@ -257,6 +335,45 @@ class UCP_WebMCP
                                         content: [{
                                             type: 'text',
                                             text: 'Error fetching discovery info: ' + error.message
+                                        }],
+                                        isError: true
+                                    };
+                                }
+                            }
+                        },
+                        {
+                            name: 'get_available_discounts',
+                            description: 'List active and public discount codes (coupons) for the store.',
+                            inputSchema: {
+                                type: 'object',
+                                properties: {}
+                            },
+                            execute: async function (args) {
+                                try {
+                                    const result = await callRestAPI('/discounts', 'GET', null);
+                                    
+                                    if (!result.discounts || result.discounts.length === 0) {
+                                        return {
+                                            content: [{ type: 'text', text: 'No public discount codes are currently available.' }],
+                                            isError: false
+                                        };
+                                    }
+
+                                    const list = result.discounts.map(d => `- **${d.code}**: ${d.description} (Value: ${d.amount} ${d.type})`).join('\n');
+                                    
+                                    return {
+                                        content: [{
+                                            type: 'text',
+                                            text: `Available Promotions:\n${list}`
+                                        }],
+                                        structuredContent: result,
+                                        isError: false
+                                    };
+                                } catch (error) {
+                                    return {
+                                        content: [{
+                                            type: 'text',
+                                            text: 'Error fetching discounts: ' + error.message
                                         }],
                                         isError: true
                                     };
