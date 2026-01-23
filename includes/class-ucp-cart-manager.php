@@ -133,17 +133,57 @@ class UCP_Cart_Manager
             $customer->set_billing_country($customer->get_shipping_country());
         }
 
-        $checkout = WC()->checkout();
-        $order_id = $checkout->create_order(array());
+        // Create order manually
+        $order = wc_create_order();
 
-        // Check if order creation failed
-        if (is_wp_error($order_id)) {
-            throw new Exception("Order creation failed: " . $order_id->get_error_message());
+        if (is_wp_error($order)) {
+            throw new Exception("Failed to create order: " . $order->get_error_message());
         }
 
-        $order = wc_get_order($order_id);
-        if (!$order) {
-            throw new Exception("Failed to retrieve created order.");
+        // Add cart items to order
+        foreach (WC()->cart->get_cart() as $cart_item_key => $values) {
+            $product = $values['data'];
+            $order->add_product($product, $values['quantity']);
+        }
+
+        // Set addresses
+        $order->set_address(array(
+            'first_name' => $customer->get_billing_first_name(),
+            'last_name' => $customer->get_billing_last_name(),
+            'email' => $customer->get_billing_email(),
+            'address_1' => $customer->get_billing_address_1(),
+            'city' => $customer->get_billing_city(),
+            'state' => $customer->get_billing_state(),
+            'postcode' => $customer->get_billing_postcode(),
+            'country' => $customer->get_billing_country(),
+        ), 'billing');
+
+        $order->set_address(array(
+            'first_name' => $customer->get_shipping_first_name(),
+            'last_name' => $customer->get_shipping_last_name(),
+            'address_1' => $customer->get_shipping_address_1(),
+            'city' => $customer->get_shipping_city(),
+            'state' => $customer->get_shipping_state(),
+            'postcode' => $customer->get_shipping_postcode(),
+            'country' => $customer->get_shipping_country(),
+        ), 'shipping');
+
+        // Apply coupons
+        foreach (WC()->cart->get_applied_coupons() as $code) {
+            $order->apply_coupon($code);
+        }
+
+        // Calculate totals
+        $order->calculate_totals();
+
+        // Set order status to pending payment
+        $order->update_status('pending', 'Order created via UCP API');
+
+        // Save the order
+        $order->save();
+
+        if (!$order->get_id()) {
+            throw new Exception("Failed to save order.");
         }
 
         return $order;

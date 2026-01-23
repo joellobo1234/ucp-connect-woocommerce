@@ -1,7 +1,6 @@
-### What's New vs v1.3.5
-- **Fix: Order Creation**: Resolved critical issue where `complete_checkout` failed due to missing billing address. The system now automatically copies shipping address to billing when creating orders.
-- **Improved UX: Payment Link Visibility**: The agent now displays the payment link in chat for 2 seconds before redirecting, allowing users to copy the link if needed.
-- **Enhanced Error Handling**: Added proper validation and error messages for WooCommerce order creation failures.
+### What's New vs v1.3.6
+- **Fix: Complete Order Creation Rewrite**: Completely rewrote the order creation logic to manually build WooCommerce orders from cart data. This fixes the persistent payment link generation error by ensuring all cart items, addresses, coupons, and totals are properly transferred to the order.
+- **Improved Reliability**: Orders are now created using `wc_create_order()` with explicit item addition, address setting, and coupon application, bypassing the problematic `WC_Checkout::create_order()` method.
 
 ### Installation
-Download `ucp-connect-woocommerce-1.3.6.zip` and install/update via your WordPress Plugins dashboard.
+Download `ucp-connect-woocommerce-1.3.7.zip` and install/update via your WordPress Plugins dashboard.
