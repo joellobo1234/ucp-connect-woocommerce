@@ -3,7 +3,7 @@
  * Plugin Name: UCP Connect for WooCommerce
  * Plugin URI:  https://ucp.dev/
  * Description: Exposes a WooCommerce store's inventory as a Universal Commerce Protocol (UCP) endpoint.
- * Version:     1.3.7
+ * Version:     2.0.0
  * Author:      Agentic Commerce Team
  * Author URI:  https://github.com/Universal-Commerce-Protocol
  * Text Domain: ucp-connect-wc
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants.
-define('UCP_CONNECT_VERSION', '1.3.7');
+define('UCP_CONNECT_VERSION', '2.0.0');
 define('UCP_CONNECT_PATH', plugin_dir_path(__FILE__));
 define('UCP_CONNECT_URL', plugin_dir_url(__FILE__));
 
@@ -87,6 +87,14 @@ class UCP_Connect_WooCommerce
 	 */
 	public function __construct()
 	{
+		// Load core classes
+		require_once UCP_CONNECT_PATH . 'includes/class-ucp-api.php';
+		require_once UCP_CONNECT_PATH . 'includes/class-ucp-mapper.php';
+		require_once UCP_CONNECT_PATH . 'includes/class-ucp-cart-manager.php';
+		require_once UCP_CONNECT_PATH . 'includes/class-ucp-store-api.php';
+		require_once UCP_CONNECT_PATH . 'includes/class-ucp-webmcp.php';
+		require_once UCP_CONNECT_PATH . 'includes/class-ucp-mcp.php';
+
 		$this->init_hooks();
 	}
 

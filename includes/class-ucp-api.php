@@ -243,17 +243,13 @@ class UCP_API
     public function create_checkout($request)
     {
         $params = $request->get_json_params();
-        $cart = new UCP_Cart_Manager();
+        $store_api = new UCP_Store_API();
 
         try {
-            // Start fresh session logic
-            $cart->start_session();
+            $items = $params['items'] ?? array();
+            $result = $store_api->create_checkout($items);
 
-            if (!empty($params['items'])) {
-                $cart->set_items($params['items']);
-            }
-
-            return new WP_REST_Response($cart->get_cart_response(), 201);
+            return new WP_REST_Response($result, 201);
 
         } catch (Exception $e) {
             return new WP_Error('checkout_error', $e->getMessage(), array('status' => 500));
@@ -267,39 +263,13 @@ class UCP_API
     public function update_checkout($request)
     {
         $id_encoded = $request->get_param('id');
-        $token = base64_decode($id_encoded, true);
-
-        if (!$token) {
-            return new WP_Error('invalid_id', 'Invalid Checkout ID format', array('status' => 400));
-        }
-
         $params = $request->get_json_params();
-        $cart = new UCP_Cart_Manager();
+        $store_api = new UCP_Store_API();
 
         try {
-            $cart->start_session($token); // Rehydrate
+            $result = $store_api->update_checkout($id_encoded, $params);
 
-            if (isset($params['items'])) {
-                $cart->set_items($params['items']);
-            }
-
-            if (isset($params['shipping_address'])) {
-                $cart->set_shipping_address($params['shipping_address']);
-            }
-
-            // Support both UCP standard nested structure and flat structure
-            $codes = array();
-            if (isset($params['discounts']) && isset($params['discounts']['codes'])) {
-                $codes = $params['discounts']['codes'];
-            } elseif (isset($params['discount_codes'])) {
-                $codes = $params['discount_codes'];
-            }
-
-            if (!empty($codes)) {
-                $cart->set_coupons($codes);
-            }
-
-            return new WP_REST_Response($cart->get_cart_response(), 200);
+            return new WP_REST_Response($result, 200);
 
         } catch (Exception $e) {
             return new WP_Error('update_error', $e->getMessage(), array('status' => 500));
@@ -313,35 +283,12 @@ class UCP_API
     public function complete_checkout($request)
     {
         $id_encoded = $request->get_param('id');
-        $token = base64_decode($id_encoded, true);
-
-        if (!$token) {
-            return new WP_Error('invalid_id', 'Invalid Checkout ID format', array('status' => 400));
-        }
-
-        $cart = new UCP_Cart_Manager();
+        $store_api = new UCP_Store_API();
 
         try {
-            $cart->start_session($token);
-            $order = $cart->checkout(); // Conversion happens here
+            $result = $store_api->complete_checkout($id_encoded);
 
-            if (!$order) {
-                return new WP_Error('order_failed', 'Failed to create order from cart', array('status' => 500));
-            }
-
-            // Return Escalation Action (Browser Redirect)
-            return new WP_REST_Response(array(
-                'status' => 'requires_escalation',
-                'continue_url' => $order->get_checkout_payment_url(),
-                'messages' => array(
-                    array(
-                        'type' => 'info',
-                        'code' => 'ESCALATION_REQUIRED',
-                        'content' => 'Payment requires browser checkout. Please follow the link to complete payment.',
-                        'severity' => 'escalation'
-                    )
-                )
-            ), 200);
+            return new WP_REST_Response($result, 200);
 
         } catch (Exception $e) {
             return new WP_Error('complete_error', $e->getMessage(), array('status' => 500));
