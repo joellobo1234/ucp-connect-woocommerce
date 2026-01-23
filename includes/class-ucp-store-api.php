@@ -22,6 +22,7 @@ class UCP_Store_API
             'method' => $method,
             'headers' => array(
                 'Content-Type' => 'application/json',
+                'Nonce' => wp_create_nonce('wc_store_api'), // Required by WC Store API
             ),
         );
 
