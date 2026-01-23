@@ -299,20 +299,27 @@ class UCP_WebMCP
                                 try {
                                     const result = await callRestAPI(`/checkout/${encodeURIComponent(args.id)}/complete`, 'POST', {});
                                     
-                                    // Automatic Redirect
-                                    if (result.continue_url) {
-                                        console.log('[UCP Connect] Redirecting to payment:', result.continue_url);
-                                        window.location.href = result.continue_url;
-                                    }
-
-                                    return {
+                                    const paymentUrl = result.continue_url;
+                                    
+                                    // Show the link in chat first
+                                    const response = {
                                         content: [{
                                             type: 'text',
-                                            text: `Order Created! Redirecting to payment...\nURL: ${result.continue_url}`
+                                            text: `✅ Order Created Successfully!\n\n🔗 Payment Link: ${paymentUrl}\n\n⏳ Redirecting you to checkout in 2 seconds...`
                                         }],
                                         structuredContent: result,
                                         isError: false
                                     };
+
+                                    // Redirect after a short delay so user can see the link
+                                    if (paymentUrl) {
+                                        setTimeout(() => {
+                                            console.log('[UCP Connect] Redirecting to payment:', paymentUrl);
+                                            window.location.href = paymentUrl;
+                                        }, 2000); // 2 second delay
+                                    }
+
+                                    return response;
                                 } catch (error) {
                                     return {
                                         content: [{ type: 'text', text: 'Error completing checkout: ' + error.message }],

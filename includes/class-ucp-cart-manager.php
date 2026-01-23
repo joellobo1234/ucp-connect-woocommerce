@@ -106,9 +106,47 @@ class UCP_Cart_Manager
             throw new Exception("Cart is empty. Session may have expired or not persisted.");
         }
 
+        // Ensure billing address matches shipping if not already set
+        $customer = WC()->customer;
+        if (empty($customer->get_billing_email())) {
+            $customer->set_billing_email('guest@example.com'); // Placeholder for guest checkout
+        }
+        if (empty($customer->get_billing_first_name())) {
+            $customer->set_billing_first_name($customer->get_shipping_first_name());
+        }
+        if (empty($customer->get_billing_last_name())) {
+            $customer->set_billing_last_name($customer->get_shipping_last_name());
+        }
+        if (empty($customer->get_billing_address_1())) {
+            $customer->set_billing_address_1($customer->get_shipping_address_1());
+        }
+        if (empty($customer->get_billing_city())) {
+            $customer->set_billing_city($customer->get_shipping_city());
+        }
+        if (empty($customer->get_billing_state())) {
+            $customer->set_billing_state($customer->get_shipping_state());
+        }
+        if (empty($customer->get_billing_postcode())) {
+            $customer->set_billing_postcode($customer->get_shipping_postcode());
+        }
+        if (empty($customer->get_billing_country())) {
+            $customer->set_billing_country($customer->get_shipping_country());
+        }
+
         $checkout = WC()->checkout();
         $order_id = $checkout->create_order(array());
-        return wc_get_order($order_id);
+
+        // Check if order creation failed
+        if (is_wp_error($order_id)) {
+            throw new Exception("Order creation failed: " . $order_id->get_error_message());
+        }
+
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            throw new Exception("Failed to retrieve created order.");
+        }
+
+        return $order;
     }
 
     /**
