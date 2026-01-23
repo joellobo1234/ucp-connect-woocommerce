@@ -49,28 +49,28 @@ class UCP_API
         ));
 
         // Checkout Endpoint: Update
-        register_rest_route(self::NAMESPACE , '/checkout/(?P<id>\d+)', array(
+        register_rest_route(self::NAMESPACE , '/checkout/(?P<id>[a-zA-Z0-9%=_-]+)', array(
             'methods' => 'POST',
             'callback' => array($this, 'update_checkout'),
             'permission_callback' => '__return_true',
             'args' => array(
                 'id' => array(
                     'validate_callback' => function ($param, $request, $key) {
-                        return is_numeric($param);
+                        return is_string($param);
                     }
                 ),
             ),
         ));
 
         // Checkout Endpoint: Complete
-        register_rest_route(self::NAMESPACE , '/checkout/(?P<id>\d+)/complete', array(
+        register_rest_route(self::NAMESPACE , '/checkout/(?P<id>[a-zA-Z0-9%=_-]+)/complete', array(
             'methods' => 'POST',
             'callback' => array($this, 'complete_checkout'),
             'permission_callback' => '__return_true',
             'args' => array(
                 'id' => array(
                     'validate_callback' => function ($param, $request, $key) {
-                        return is_numeric($param);
+                        return is_string($param);
                     }
                 ),
             ),

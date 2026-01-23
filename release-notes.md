@@ -1,7 +1,7 @@
-### What's New vs v1.3.3
-- **Smart Product Context**: The AI now "sees" product dimensions, attributes (care info, color), and sale status/regular price in the `search_products` output. This specifically enables scenarios like "Find a plant that fits my 10cm shelf."
-- **Rich Comparisons**: Agents can now compare products side-by-side based on exposed metadata (e.g. "Which cactus is smaller?").
-- **Bug Fix**: Fixed an issue where the AI only saw product names and prices, ignoring other vital decision-making data.
+### What's New vs v1.3.4
+- **Fix: Token-Based Checkout**: Resolved a critical 404 error when updating carts or completing checkout. The API now correctly accepts alphanumeric Base64 tokens instead of expecting only numeric IDs.
+- **Improved: Product Context**: The `search_products` tool now exposes product descriptions (stripped of HTML) to the AI agent. This allows agents to understand product details, usage, and care instructions even if specific dimension attributes are missing.
+- **Fix: Coupon Visibility**: Hardened the `get_available_discounts` logic to forcefully suppress third-party filters, ensuring that published coupons (like 'plants10') are always visible to the agent.
 
 ### Installation
-Download `ucp-connect-woocommerce-1.3.4.zip` and install/update via your WordPress Plugins dashboard.
+Download `ucp-connect-woocommerce-1.3.5.zip` and install/update via your WordPress Plugins dashboard.

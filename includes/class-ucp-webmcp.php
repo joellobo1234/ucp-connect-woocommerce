@@ -134,6 +134,15 @@ class UCP_WebMCP
                                         const productList = result.items.map(item => {
                                             let details = [];
 
+                                            // Description (New: Critical for Context)
+                                            if (item.description) {
+                                                // Strip HTML tags and truncate
+                                                const cleanDesc = item.description.replace(/<[^>]*>?/gm, '').trim();
+                                                if (cleanDesc) {
+                                                    details.push(cleanDesc.substring(0, 300) + (cleanDesc.length > 300 ? '...' : ''));
+                                                }
+                                            }
+
                                             // Price & Sale
                                             let priceStr = item.price ? `${item.price.value} ${item.price.currency}` : 'N/A';
                                             if (item.isOnSale) {
@@ -145,7 +154,8 @@ class UCP_WebMCP
                                             details.push(`Stock: ${item.availability}`);
 
                                             // Dimensions
-                                            if (item.dimensions && (item.dimensions.length || item.dimensions.width || item.dimensions.height)) {
+                                            // Check if we have an object with dimensions, not an empty array
+                                            if (item.dimensions && !Array.isArray(item.dimensions) && (item.dimensions.length || item.dimensions.width || item.dimensions.height)) {
                                                 const d = item.dimensions;
                                                 details.push(`Dims: ${d.length}x${d.width}x${d.height} ${d.unit || ''}`);
                                             }
