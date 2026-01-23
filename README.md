@@ -5,7 +5,7 @@
 # UCP Connect for WooCommerce: Agentic Commerce Endpoint
 
 ![License](https://img.shields.io/badge/License-GPLv2-blue.svg)
-![Version](https://img.shields.io/badge/Version-1.3.1-green.svg)
+![Version](https://img.shields.io/badge/Version-1.3.3-green.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)
 ![WooCommerce](https://img.shields.io/badge/WooCommerce-Active-violet.svg)
 
@@ -24,7 +24,7 @@ Most stores are invisible to these agents. **UCP Connect** makes your store visi
 ### Key Capabilities
 - **🔎 Unified "Smart" Search**: Intelligent search logic that understands natural language. It handles singular/plural variations (finding "hoodie" when asked for "hoodies") and understands categories, ensuring agents never hit a dead end.
 - **📜 List All Products**: Simply pass an empty query to `search_products("")` to retrieve the entire product catalog (paginated).
-- **🛒 Programmatic Checkout**: Agents can build carts and generate secure, one-click checkout links for users to complete the purchase.
+- **🛒 Stateless Cart Architecture**: Uses secure **Cart Tokens** to manage shopping sessions without cookies or database clutter. Agents can add items, apply coupons (`update_checkout`), and then generate a secure payment link (`complete_checkout`).
 - **🤖 Dual-Protocol Support**:
     - **WebMCP**: For browser-based agents (Chrome Extensions, Web Chatbots).
     - **Native MCP Server**: For server-side agents (Claude Desktop, VS Code, Custom Clients).
@@ -91,7 +91,9 @@ For developers building custom connectors, the plugin exposes standard REST endp
 | :--- | :--- | :--- |
 | `/wp-json/ucp/v1/discovery` | `GET` | Returns store capabilities and protocol version. |
 | `/wp-json/ucp/v1/search` | `POST` | Semantic-aware product search. |
-| `/wp-json/ucp/v1/checkout` | `POST` | Creates a checkout session & payment link. |
+| `/wp-json/ucp/v1/checkout` | `POST` | **Create Cart**: Returns a secure `cart_token`. |
+| `/wp-json/ucp/v1/checkout/{token}` | `POST` | **Update Cart**: Add items or apply coupons to an active session. |
+| `/wp-json/ucp/v1/checkout/{token}/complete` | `POST` | **Finalize Order**: Converts the stateless cart into a WooCommerce Order and returns a payment link. |
 
 ---
 

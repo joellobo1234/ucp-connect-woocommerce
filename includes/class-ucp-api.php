@@ -34,11 +34,39 @@ class UCP_API
             'permission_callback' => '__return_true', // Public endpoint
         ));
 
-        // Checkout Endpoint
+        // Checkout Endpoint: Create
         register_rest_route(self::NAMESPACE , '/checkout', array(
             'methods' => 'POST',
             'callback' => array($this, 'create_checkout'),
             'permission_callback' => '__return_true',
+        ));
+
+        // Checkout Endpoint: Update
+        register_rest_route(self::NAMESPACE , '/checkout/(?P<id>\d+)', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'update_checkout'),
+            'permission_callback' => '__return_true',
+            'args' => array(
+                'id' => array(
+                    'validate_callback' => function ($param, $request, $key) {
+                        return is_numeric($param);
+                    }
+                ),
+            ),
+        ));
+
+        // Checkout Endpoint: Complete
+        register_rest_route(self::NAMESPACE , '/checkout/(?P<id>\d+)/complete', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'complete_checkout'),
+            'permission_callback' => '__return_true',
+            'args' => array(
+                'id' => array(
+                    'validate_callback' => function ($param, $request, $key) {
+                        return is_numeric($param);
+                    }
+                ),
+            ),
         ));
     }
 
@@ -163,49 +191,101 @@ class UCP_API
 
     /**
      * POST /checkout
-     * Creates a tentative order/checkout session.
+     * Creates a new cart session.
      */
     public function create_checkout($request)
     {
         $params = $request->get_json_params();
-
-        if (empty($params['items'])) {
-            return new WP_Error('missing_items', 'No items provided in checkout request', array('status' => 400));
-        }
+        $cart = new UCP_Cart_Manager();
 
         try {
-            // Create a new order
-            $order = wc_create_order();
+            // Start fresh session logic
+            $cart->start_session();
 
-            foreach ($params['items'] as $item) {
-                $product_id = isset($item['id']) ? absint($item['id']) : 0;
-                $quantity = isset($item['quantity']) ? absint($item['quantity']) : 1;
-
-                if ($product_id) {
-                    $order->add_product(wc_get_product($product_id), $quantity);
-                }
+            if (!empty($params['items'])) {
+                $cart->set_items($params['items']);
             }
 
-            // Set address if provided (simplified)
-            if (!empty($params['customer'])) {
-                // Map customer fields if available in UCP schema
-                // $order->set_billing_first_name( ... );
-            }
-
-            $order->calculate_totals();
-            $order->save();
-
-            return new WP_REST_Response(array(
-                'order_id' => $order->get_id(),
-                'status' => $order->get_status(),
-                'currency' => $order->get_currency(),
-                'total' => $order->get_total(),
-                'payment_url' => $order->get_checkout_payment_url(),
-                'message' => 'Checkout created. You MUST present the "payment_url" directly to the user to finalize the transaction.',
-            ), 201);
+            return new WP_REST_Response($cart->get_cart_response(), 201);
 
         } catch (Exception $e) {
             return new WP_Error('checkout_error', $e->getMessage(), array('status' => 500));
+        }
+    }
+
+    /**
+     * POST /checkout/{id}
+     * Updates an existing cart session.
+     */
+    public function update_checkout($request)
+    {
+        $id_encoded = $request->get_param('id');
+        $token = base64_decode($id_encoded, true);
+
+        if (!$token) {
+            return new WP_Error('invalid_id', 'Invalid Checkout ID format', array('status' => 400));
+        }
+
+        $params = $request->get_json_params();
+        $cart = new UCP_Cart_Manager();
+
+        try {
+            $cart->start_session($token); // Rehydrate
+
+            if (isset($params['items'])) {
+                $cart->set_items($params['items']);
+            }
+
+            if (isset($params['discount_codes'])) {
+                $cart->set_coupons($params['discount_codes']);
+            }
+
+            return new WP_REST_Response($cart->get_cart_response(), 200);
+
+        } catch (Exception $e) {
+            return new WP_Error('update_error', $e->getMessage(), array('status' => 500));
+        }
+    }
+
+    /**
+     * POST /checkout/{id}/complete
+     * Converts cart to order and requests payment/escalation.
+     */
+    public function complete_checkout($request)
+    {
+        $id_encoded = $request->get_param('id');
+        $token = base64_decode($id_encoded, true);
+
+        if (!$token) {
+            return new WP_Error('invalid_id', 'Invalid Checkout ID format', array('status' => 400));
+        }
+
+        $cart = new UCP_Cart_Manager();
+
+        try {
+            $cart->start_session($token);
+            $order = $cart->checkout(); // Conversion happens here
+
+            if (!$order) {
+                return new WP_Error('order_failed', 'Failed to create order from cart', array('status' => 500));
+            }
+
+            // Return Escalation Action (Browser Redirect)
+            return new WP_REST_Response(array(
+                'status' => 'requires_escalation',
+                'continue_url' => $order->get_checkout_payment_url(),
+                'messages' => array(
+                    array(
+                        'type' => 'info',
+                        'code' => 'ESCALATION_REQUIRED',
+                        'content' => 'Payment requires browser checkout. Please follow the link to complete payment.',
+                        'severity' => 'escalation'
+                    )
+                )
+            ), 200);
+
+        } catch (Exception $e) {
+            return new WP_Error('complete_error', $e->getMessage(), array('status' => 500));
         }
     }
 }

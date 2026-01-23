@@ -19,9 +19,6 @@ class UCP_Mapper
      */
     public function map_product_to_item($product)
     {
-        $image_id = $product->get_image_id();
-        $image_url = $image_id ? wp_get_attachment_url($image_id) : '';
-
         return array(
             'id' => (string) $product->get_id(),
             'name' => $product->get_name(),
@@ -32,14 +29,48 @@ class UCP_Mapper
                 'value' => (float) $product->get_price(),
                 'currency' => get_woocommerce_currency(),
             ),
-            'images' => $image_url ? array($image_url) : array(),
+            'images' => $this->get_images($product),
             'availability' => $product->is_in_stock() ? 'IN_STOCK' : 'OUT_OF_STOCK',
             'attributes' => $this->get_attributes($product),
+            'dimensions' => $this->get_dimensions($product),
+            'weight' => $product->get_weight(),
+            'type' => $product->get_type(),
         );
     }
 
     /**
-     * Get product attributes in a simplified format.
+     * Get all product images (main + gallery).
+     *
+     * @param WC_Product $product
+     * @return array List of image URLs.
+     */
+    private function get_images($product)
+    {
+        $images = array();
+
+        // Main Image
+        $main_image_id = $product->get_image_id();
+        if ($main_image_id) {
+            $url = wp_get_attachment_url($main_image_id);
+            if ($url)
+                $images[] = $url;
+        }
+
+        // Gallery Images
+        $attachment_ids = $product->get_gallery_image_ids();
+        if ($attachment_ids) {
+            foreach ($attachment_ids as $attachment_id) {
+                $url = wp_get_attachment_url($attachment_id);
+                if ($url)
+                    $images[] = $url;
+            }
+        }
+
+        return $images;
+    }
+
+    /**
+     * Get product attributes.
      *
      * @param WC_Product $product
      * @return array
@@ -48,9 +79,34 @@ class UCP_Mapper
     {
         $attributes = array();
         foreach ($product->get_attributes() as $attribute) {
-            // This is a basic extraction, might need refining for variations
-            $attributes[$attribute->get_name()] = $attribute->get_options();
+            $name = $attribute->get_name();
+            // Handle taxonomy-based attributes vs custom text attributes
+            if ($attribute->is_taxonomy()) {
+                $terms = wc_get_product_terms($product->get_id(), $attribute->get_name(), array('fields' => 'names'));
+                $attributes[$name] = $terms;
+            } else {
+                $attributes[$name] = $attribute->get_options();
+            }
         }
         return $attributes;
+    }
+
+    /**
+     * Get product dimensions formatted.
+     *
+     * @param WC_Product $product
+     * @return array
+     */
+    private function get_dimensions($product)
+    {
+        if (!$product->has_dimensions()) {
+            return array();
+        }
+        return array(
+            'length' => $product->get_length(),
+            'width' => $product->get_width(),
+            'height' => $product->get_height(),
+            'unit' => get_option('woocommerce_dimension_unit'),
+        );
     }
 }

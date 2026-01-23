@@ -49,6 +49,7 @@ function ucp_connect_init()
 	// Include core classes.
 	require_once UCP_CONNECT_PATH . 'includes/class-ucp-api.php';
 	require_once UCP_CONNECT_PATH . 'includes/class-ucp-mapper.php';
+	require_once UCP_CONNECT_PATH . 'includes/class-ucp-cart-manager.php';
 	require_once UCP_CONNECT_PATH . 'includes/class-ucp-mcp.php';
 	require_once UCP_CONNECT_PATH . 'includes/class-ucp-webmcp.php';
 
