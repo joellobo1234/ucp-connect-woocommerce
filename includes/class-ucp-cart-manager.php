@@ -69,6 +69,11 @@ class UCP_Cart_Manager
                 WC()->cart->add_to_cart($product_id, $quantity);
             }
         }
+
+        // Explicitly save the session
+        if (WC()->session) {
+            WC()->session->save_data();
+        }
     }
 
     /**
@@ -84,6 +89,10 @@ class UCP_Cart_Manager
         foreach ($codes as $code) {
             WC()->cart->apply_coupon($code);
         }
+
+        if (WC()->session) {
+            WC()->session->save_data();
+        }
     }
 
     /**
@@ -93,6 +102,10 @@ class UCP_Cart_Manager
      */
     public function checkout()
     {
+        if (WC()->cart->is_empty()) {
+            throw new Exception("Cart is empty. Session may have expired or not persisted.");
+        }
+
         $checkout = WC()->checkout();
         $order_id = $checkout->create_order(array());
         return wc_get_order($order_id);
