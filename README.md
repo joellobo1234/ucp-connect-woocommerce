@@ -5,7 +5,7 @@
 # UCP Connect for WooCommerce: Agentic Commerce Endpoint
 
 ![License](https://img.shields.io/badge/License-GPLv2-blue.svg)
-![Version](https://img.shields.io/badge/Version-1.3.3-green.svg)
+![Version](https://img.shields.io/badge/Version-1.3.4-green.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)
 ![WooCommerce](https://img.shields.io/badge/WooCommerce-Active-violet.svg)
 
@@ -23,6 +23,7 @@ Most stores are invisible to these agents. **UCP Connect** makes your store visi
 
 ### Key Capabilities
 - **🔎 Unified "Smart" Search**: Intelligent search logic that understands natural language. It handles singular/plural variations (finding "hoodie" when asked for "hoodies") and understands categories, ensuring agents never hit a dead end.
+- **🧠 Rich Product Context**: Exposes key comparison data like Dimensions, Attributes (color, care instructions), and Live Stock Status directly to the AI, enabling "Smart Comparisons" (e.g., *"Which plant fits on my 10cm shelf?"*).
 - **📜 List All Products**: Simply pass an empty query to `search_products("")` to retrieve the entire product catalog (paginated).
 - **🛒 Stateless Cart Architecture**: Uses secure **Cart Tokens** to manage shopping sessions without cookies or database clutter. Agents can add items, apply coupons (`update_checkout`), and then generate a secure payment link (`complete_checkout`).
 - **🤖 Dual-Protocol Support**:

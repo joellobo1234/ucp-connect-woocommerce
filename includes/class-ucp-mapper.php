@@ -29,6 +29,8 @@ class UCP_Mapper
                 'value' => (float) $product->get_price(),
                 'currency' => get_woocommerce_currency(),
             ),
+            'isOnSale' => $product->is_on_sale(),
+            'regularPrice' => $product->is_on_sale() ? (float) $product->get_regular_price() : null,
             'images' => $this->get_images($product),
             'availability' => $product->is_in_stock() ? 'IN_STOCK' : 'OUT_OF_STOCK',
             'attributes' => $this->get_attributes($product),

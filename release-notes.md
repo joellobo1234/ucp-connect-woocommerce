@@ -1,8 +1,7 @@
-### What's New vs v1.3.2
-- **Stateless Cart Architecture**: Implemented a secure `Cart-Token` system. Carts are now managed via stateless sessions (`includes/class-ucp-cart-manager.php`) instead of creating premature "Pending Orders".
-- **Interactive Checkout**: The API now supports `create`, `update` (add items/coupons), and `complete` (convert to order) endpoints.
-- **Enhanced Data Mapping**: Products now expose full image galleries, global/custom attributes, and physical dimensions.
-- **Security**: "Order Spam" in the admin dashboard is eliminated; orders are only created upon final checkout intent.
+### What's New vs v1.3.3
+- **Smart Product Context**: The AI now "sees" product dimensions, attributes (care info, color), and sale status/regular price in the `search_products` output. This specifically enables scenarios like "Find a plant that fits my 10cm shelf."
+- **Rich Comparisons**: Agents can now compare products side-by-side based on exposed metadata (e.g. "Which cactus is smaller?").
+- **Bug Fix**: Fixed an issue where the AI only saw product names and prices, ignoring other vital decision-making data.
 
 ### Installation
-Download `ucp-connect-woocommerce-1.3.3.zip` and install/update via your WordPress Plugins dashboard.
+Download `ucp-connect-woocommerce-1.3.4.zip` and install/update via your WordPress Plugins dashboard.

@@ -132,9 +132,34 @@ class UCP_WebMCP
 
                                     if (count > 0) {
                                         const productList = result.items.map(item => {
-                                            const price = item.price ? `${item.price.value} ${item.price.currency}` : 'N/A';
-                                            return `- [ID: ${item.id}] ${item.name} (${price})`;
-                                        }).join('\n');
+                                            let details = [];
+
+                                            // Price & Sale
+                                            let priceStr = item.price ? `${item.price.value} ${item.price.currency}` : 'N/A';
+                                            if (item.isOnSale) {
+                                                priceStr += ` (On Sale! Reg: ${item.regularPrice})`;
+                                            }
+                                            details.push(`Price: ${priceStr}`);
+
+                                            // Stock
+                                            details.push(`Stock: ${item.availability}`);
+
+                                            // Dimensions
+                                            if (item.dimensions && (item.dimensions.length || item.dimensions.width || item.dimensions.height)) {
+                                                const d = item.dimensions;
+                                                details.push(`Dims: ${d.length}x${d.width}x${d.height} ${d.unit || ''}`);
+                                            }
+
+                                            // Attributes
+                                            if (item.attributes && Object.keys(item.attributes).length > 0) {
+                                                const attrs = Object.entries(item.attributes)
+                                                    .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+                                                    .join('; ');
+                                                details.push(`Attrs: ${attrs}`);
+                                            }
+
+                                            return `- [ID: ${item.id}] **${item.name}**\n  ${details.join(' | ')}`;
+                                        }).join('\n\n');
                                         text += `:\n${productList}`;
                                     }
 
